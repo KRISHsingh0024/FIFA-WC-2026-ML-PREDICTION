@@ -1524,6 +1524,31 @@ function SimulatorView({ simResults, simulating, triggerSimulationRun, user, set
   const [matchOdds, setMatchOdds] = useState(null)
   const [oddsLoading, setOddsLoading] = useState(false)
 
+  const handleAutoFill = () => {
+    if (!sample) return;
+    const newPicks = {};
+    
+    // Populate R16
+    sample.r16_matches.forEach((m, idx) => {
+      newPicks[`R16-${idx + 1}`] = m.winner;
+    });
+    
+    // Populate QF
+    sample.qf_matches.forEach((m, idx) => {
+      newPicks[`QF-${idx + 1}`] = m.winner;
+    });
+    
+    // Populate SF
+    sample.sf_matches.forEach((m, idx) => {
+      newPicks[`SF-${idx + 1}`] = m.winner;
+    });
+    
+    // Populate Final
+    newPicks['FINAL'] = sample.final_match.winner;
+    
+    setPicks(newPicks);
+  }
+
   // Fetch locked predictions if user logged in
   useEffect(() => {
     if (user?.email) {
@@ -1895,6 +1920,13 @@ function SimulatorView({ simResults, simulating, triggerSimulationRun, user, set
             </div>
           ) : (
             <div className="relative z-10 flex flex-col md:flex-row items-center gap-4">
+              <button
+                onClick={handleAutoFill}
+                className="bg-white/[0.04] border border-white/[0.08] hover:bg-[#00e87b]/10 hover:border-[#00e87b]/20 text-[#7b93a8] hover:text-[#00e87b] font-bold px-4 py-2.5 rounded-full text-[11px] transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                <Cpu size={12} />
+                Auto-fill with ML Projections
+              </button>
               <div className="text-right">
                 <span className="text-[10px] text-[#7b93a8] block uppercase font-bold tracking-wider">Progress</span>
                 <span className="text-xs text-white block mt-0.5 font-semibold">{interactivePicksCount} / 15 Picks Made</span>
