@@ -1,388 +1,388 @@
 {
     "sim_stats": {
         "Mexico": {
-            "champion_prob": 0.064,
-            "finalist_prob": 0.144,
-            "semi_finalist_prob": 0.242,
-            "quarter_finalist_prob": 0.242,
-            "round_of_16_prob": 0.402,
-            "round_of_32_prob": 0.714
+            "champion_prob": 0.021,
+            "finalist_prob": 0.086,
+            "semi_finalist_prob": 0.173,
+            "quarter_finalist_prob": 0.173,
+            "round_of_16_prob": 0.302,
+            "round_of_32_prob": 0.562
         },
         "South Africa": {
-            "champion_prob": 0.0,
+            "champion_prob": 0.001,
             "finalist_prob": 0.002,
-            "semi_finalist_prob": 0.006,
-            "quarter_finalist_prob": 0.006,
-            "round_of_16_prob": 0.032,
-            "round_of_32_prob": 0.15
+            "semi_finalist_prob": 0.007,
+            "quarter_finalist_prob": 0.007,
+            "round_of_16_prob": 0.052,
+            "round_of_32_prob": 0.186
         },
         "South Korea": {
-            "champion_prob": 0.024,
-            "finalist_prob": 0.076,
-            "semi_finalist_prob": 0.16,
-            "quarter_finalist_prob": 0.16,
-            "round_of_16_prob": 0.358,
-            "round_of_32_prob": 0.672
+            "champion_prob": 0.031,
+            "finalist_prob": 0.079,
+            "semi_finalist_prob": 0.179,
+            "quarter_finalist_prob": 0.179,
+            "round_of_16_prob": 0.331,
+            "round_of_32_prob": 0.623
         },
         "Czechia": {
             "champion_prob": 0.0,
             "finalist_prob": 0.0,
-            "semi_finalist_prob": 0.0,
-            "quarter_finalist_prob": 0.0,
-            "round_of_16_prob": 0.01,
-            "round_of_32_prob": 0.098
+            "semi_finalist_prob": 0.003,
+            "quarter_finalist_prob": 0.003,
+            "round_of_16_prob": 0.016,
+            "round_of_32_prob": 0.09
         },
         "Canada": {
-            "champion_prob": 0.002,
-            "finalist_prob": 0.008,
-            "semi_finalist_prob": 0.03,
-            "quarter_finalist_prob": 0.03,
-            "round_of_16_prob": 0.106,
-            "round_of_32_prob": 0.266
+            "champion_prob": 0.003,
+            "finalist_prob": 0.011,
+            "semi_finalist_prob": 0.034,
+            "quarter_finalist_prob": 0.034,
+            "round_of_16_prob": 0.103,
+            "round_of_32_prob": 0.264
         },
         "Bosnia and Herzegovina": {
             "champion_prob": 0.0,
             "finalist_prob": 0.0,
-            "semi_finalist_prob": 0.002,
-            "quarter_finalist_prob": 0.002,
-            "round_of_16_prob": 0.016,
-            "round_of_32_prob": 0.088
+            "semi_finalist_prob": 0.003,
+            "quarter_finalist_prob": 0.003,
+            "round_of_16_prob": 0.013,
+            "round_of_32_prob": 0.106
         },
         "Qatar": {
-            "champion_prob": 0.0,
-            "finalist_prob": 0.006,
-            "semi_finalist_prob": 0.014,
-            "quarter_finalist_prob": 0.014,
-            "round_of_16_prob": 0.044,
-            "round_of_32_prob": 0.168
+            "champion_prob": 0.001,
+            "finalist_prob": 0.009,
+            "semi_finalist_prob": 0.024,
+            "quarter_finalist_prob": 0.024,
+            "round_of_16_prob": 0.061,
+            "round_of_32_prob": 0.199
         },
         "Switzerland": {
-            "champion_prob": 0.02,
-            "finalist_prob": 0.056,
-            "semi_finalist_prob": 0.118,
-            "quarter_finalist_prob": 0.118,
-            "round_of_16_prob": 0.27,
-            "round_of_32_prob": 0.552
+            "champion_prob": 0.043,
+            "finalist_prob": 0.096,
+            "semi_finalist_prob": 0.164,
+            "quarter_finalist_prob": 0.164,
+            "round_of_16_prob": 0.356,
+            "round_of_32_prob": 0.621
         },
         "Brazil": {
-            "champion_prob": 0.156,
-            "finalist_prob": 0.22,
-            "semi_finalist_prob": 0.318,
-            "quarter_finalist_prob": 0.318,
-            "round_of_16_prob": 0.458,
-            "round_of_32_prob": 0.732
+            "champion_prob": 0.068,
+            "finalist_prob": 0.129,
+            "semi_finalist_prob": 0.226,
+            "quarter_finalist_prob": 0.226,
+            "round_of_16_prob": 0.372,
+            "round_of_32_prob": 0.654
         },
         "Morocco": {
-            "champion_prob": 0.044,
-            "finalist_prob": 0.084,
-            "semi_finalist_prob": 0.158,
-            "quarter_finalist_prob": 0.158,
-            "round_of_16_prob": 0.284,
-            "round_of_32_prob": 0.552
+            "champion_prob": 0.022,
+            "finalist_prob": 0.062,
+            "semi_finalist_prob": 0.113,
+            "quarter_finalist_prob": 0.113,
+            "round_of_16_prob": 0.255,
+            "round_of_32_prob": 0.509
         },
         "Haiti": {
             "champion_prob": 0.0,
             "finalist_prob": 0.0,
-            "semi_finalist_prob": 0.0,
-            "quarter_finalist_prob": 0.0,
-            "round_of_16_prob": 0.002,
-            "round_of_32_prob": 0.018
+            "semi_finalist_prob": 0.001,
+            "quarter_finalist_prob": 0.001,
+            "round_of_16_prob": 0.004,
+            "round_of_32_prob": 0.033
         },
         "Scotland": {
-            "champion_prob": 0.0,
-            "finalist_prob": 0.006,
-            "semi_finalist_prob": 0.022,
-            "quarter_finalist_prob": 0.022,
-            "round_of_16_prob": 0.084,
-            "round_of_32_prob": 0.236
+            "champion_prob": 0.002,
+            "finalist_prob": 0.011,
+            "semi_finalist_prob": 0.033,
+            "quarter_finalist_prob": 0.033,
+            "round_of_16_prob": 0.086,
+            "round_of_32_prob": 0.244
         },
         "United States": {
-            "champion_prob": 0.068,
-            "finalist_prob": 0.094,
-            "semi_finalist_prob": 0.202,
-            "quarter_finalist_prob": 0.202,
-            "round_of_16_prob": 0.33,
-            "round_of_32_prob": 0.554
+            "champion_prob": 0.021,
+            "finalist_prob": 0.051,
+            "semi_finalist_prob": 0.145,
+            "quarter_finalist_prob": 0.145,
+            "round_of_16_prob": 0.261,
+            "round_of_32_prob": 0.478
         },
         "Paraguay": {
-            "champion_prob": 0.0,
-            "finalist_prob": 0.004,
-            "semi_finalist_prob": 0.008,
-            "quarter_finalist_prob": 0.008,
-            "round_of_16_prob": 0.026,
-            "round_of_32_prob": 0.072
+            "champion_prob": 0.003,
+            "finalist_prob": 0.003,
+            "semi_finalist_prob": 0.005,
+            "quarter_finalist_prob": 0.005,
+            "round_of_16_prob": 0.025,
+            "round_of_32_prob": 0.108
         },
         "Australia": {
-            "champion_prob": 0.012,
-            "finalist_prob": 0.032,
-            "semi_finalist_prob": 0.09,
-            "quarter_finalist_prob": 0.09,
-            "round_of_16_prob": 0.154,
-            "round_of_32_prob": 0.36
+            "champion_prob": 0.008,
+            "finalist_prob": 0.034,
+            "semi_finalist_prob": 0.108,
+            "quarter_finalist_prob": 0.108,
+            "round_of_16_prob": 0.215,
+            "round_of_32_prob": 0.395
         },
         "Turkey": {
-            "champion_prob": 0.008,
-            "finalist_prob": 0.024,
-            "semi_finalist_prob": 0.064,
-            "quarter_finalist_prob": 0.064,
-            "round_of_16_prob": 0.138,
-            "round_of_32_prob": 0.296
+            "champion_prob": 0.011,
+            "finalist_prob": 0.027,
+            "semi_finalist_prob": 0.054,
+            "quarter_finalist_prob": 0.054,
+            "round_of_16_prob": 0.132,
+            "round_of_32_prob": 0.266
         },
         "Germany": {
-            "champion_prob": 0.03,
-            "finalist_prob": 0.064,
-            "semi_finalist_prob": 0.128,
-            "quarter_finalist_prob": 0.128,
-            "round_of_16_prob": 0.276,
-            "round_of_32_prob": 0.534
+            "champion_prob": 0.038,
+            "finalist_prob": 0.092,
+            "semi_finalist_prob": 0.177,
+            "quarter_finalist_prob": 0.177,
+            "round_of_16_prob": 0.325,
+            "round_of_32_prob": 0.625
         },
         "Curacao": {
             "champion_prob": 0.0,
             "finalist_prob": 0.0,
-            "semi_finalist_prob": 0.0,
-            "quarter_finalist_prob": 0.0,
-            "round_of_16_prob": 0.002,
-            "round_of_32_prob": 0.034
+            "semi_finalist_prob": 0.001,
+            "quarter_finalist_prob": 0.001,
+            "round_of_16_prob": 0.004,
+            "round_of_32_prob": 0.041
         },
         "Ivory Coast": {
-            "champion_prob": 0.0,
-            "finalist_prob": 0.004,
-            "semi_finalist_prob": 0.036,
-            "quarter_finalist_prob": 0.036,
-            "round_of_16_prob": 0.134,
-            "round_of_32_prob": 0.322
+            "champion_prob": 0.002,
+            "finalist_prob": 0.013,
+            "semi_finalist_prob": 0.038,
+            "quarter_finalist_prob": 0.038,
+            "round_of_16_prob": 0.113,
+            "round_of_32_prob": 0.294
         },
         "Ecuador": {
-            "champion_prob": 0.012,
-            "finalist_prob": 0.016,
-            "semi_finalist_prob": 0.048,
-            "quarter_finalist_prob": 0.048,
-            "round_of_16_prob": 0.118,
-            "round_of_32_prob": 0.292
+            "champion_prob": 0.006,
+            "finalist_prob": 0.021,
+            "semi_finalist_prob": 0.05,
+            "quarter_finalist_prob": 0.05,
+            "round_of_16_prob": 0.131,
+            "round_of_32_prob": 0.314
         },
         "Netherlands": {
-            "champion_prob": 0.046,
-            "finalist_prob": 0.106,
-            "semi_finalist_prob": 0.204,
-            "quarter_finalist_prob": 0.204,
-            "round_of_16_prob": 0.438,
-            "round_of_32_prob": 0.756
+            "champion_prob": 0.043,
+            "finalist_prob": 0.094,
+            "semi_finalist_prob": 0.213,
+            "quarter_finalist_prob": 0.213,
+            "round_of_16_prob": 0.449,
+            "round_of_32_prob": 0.778
         },
         "Japan": {
-            "champion_prob": 0.02,
-            "finalist_prob": 0.048,
-            "semi_finalist_prob": 0.132,
-            "quarter_finalist_prob": 0.132,
-            "round_of_16_prob": 0.306,
-            "round_of_32_prob": 0.65
+            "champion_prob": 0.021,
+            "finalist_prob": 0.068,
+            "semi_finalist_prob": 0.121,
+            "quarter_finalist_prob": 0.121,
+            "round_of_16_prob": 0.294,
+            "round_of_32_prob": 0.656
         },
         "Sweden": {
-            "champion_prob": 0.0,
-            "finalist_prob": 0.008,
-            "semi_finalist_prob": 0.018,
-            "quarter_finalist_prob": 0.018,
-            "round_of_16_prob": 0.078,
-            "round_of_32_prob": 0.214
+            "champion_prob": 0.003,
+            "finalist_prob": 0.011,
+            "semi_finalist_prob": 0.023,
+            "quarter_finalist_prob": 0.023,
+            "round_of_16_prob": 0.077,
+            "round_of_32_prob": 0.234
         },
         "Tunisia": {
-            "champion_prob": 0.002,
-            "finalist_prob": 0.006,
-            "semi_finalist_prob": 0.026,
-            "quarter_finalist_prob": 0.026,
-            "round_of_16_prob": 0.088,
-            "round_of_32_prob": 0.22
+            "champion_prob": 0.003,
+            "finalist_prob": 0.011,
+            "semi_finalist_prob": 0.028,
+            "quarter_finalist_prob": 0.028,
+            "round_of_16_prob": 0.097,
+            "round_of_32_prob": 0.23
         },
         "Belgium": {
-            "champion_prob": 0.03,
-            "finalist_prob": 0.066,
-            "semi_finalist_prob": 0.132,
-            "quarter_finalist_prob": 0.132,
-            "round_of_16_prob": 0.22,
-            "round_of_32_prob": 0.406
+            "champion_prob": 0.033,
+            "finalist_prob": 0.06,
+            "semi_finalist_prob": 0.116,
+            "quarter_finalist_prob": 0.116,
+            "round_of_16_prob": 0.227,
+            "round_of_32_prob": 0.4
         },
         "Egypt": {
-            "champion_prob": 0.0,
-            "finalist_prob": 0.004,
-            "semi_finalist_prob": 0.024,
-            "quarter_finalist_prob": 0.024,
-            "round_of_16_prob": 0.066,
-            "round_of_32_prob": 0.158
+            "champion_prob": 0.001,
+            "finalist_prob": 0.005,
+            "semi_finalist_prob": 0.013,
+            "quarter_finalist_prob": 0.013,
+            "round_of_16_prob": 0.058,
+            "round_of_32_prob": 0.16
         },
         "Iran": {
-            "champion_prob": 0.016,
-            "finalist_prob": 0.048,
-            "semi_finalist_prob": 0.108,
-            "quarter_finalist_prob": 0.108,
-            "round_of_16_prob": 0.222,
-            "round_of_32_prob": 0.29
+            "champion_prob": 0.009,
+            "finalist_prob": 0.031,
+            "semi_finalist_prob": 0.072,
+            "quarter_finalist_prob": 0.072,
+            "round_of_16_prob": 0.179,
+            "round_of_32_prob": 0.267
         },
         "New Zealand": {
             "champion_prob": 0.0,
-            "finalist_prob": 0.002,
-            "semi_finalist_prob": 0.002,
-            "quarter_finalist_prob": 0.002,
-            "round_of_16_prob": 0.008,
-            "round_of_32_prob": 0.052
-        },
-        "Spain": {
-            "champion_prob": 0.07,
-            "finalist_prob": 0.138,
-            "semi_finalist_prob": 0.256,
-            "quarter_finalist_prob": 0.256,
-            "round_of_16_prob": 0.482,
-            "round_of_32_prob": 0.732
-        },
-        "Cape Verde": {
-            "champion_prob": 0.0,
             "finalist_prob": 0.0,
             "semi_finalist_prob": 0.0,
             "quarter_finalist_prob": 0.0,
-            "round_of_16_prob": 0.006,
-            "round_of_32_prob": 0.044
+            "round_of_16_prob": 0.002,
+            "round_of_32_prob": 0.033
+        },
+        "Spain": {
+            "champion_prob": 0.111,
+            "finalist_prob": 0.19,
+            "semi_finalist_prob": 0.29,
+            "quarter_finalist_prob": 0.29,
+            "round_of_16_prob": 0.484,
+            "round_of_32_prob": 0.792
+        },
+        "Cape Verde": {
+            "champion_prob": 0.0,
+            "finalist_prob": 0.001,
+            "semi_finalist_prob": 0.003,
+            "quarter_finalist_prob": 0.003,
+            "round_of_16_prob": 0.008,
+            "round_of_32_prob": 0.039
         },
         "Saudi Arabia": {
-            "champion_prob": 0.0,
-            "finalist_prob": 0.0,
-            "semi_finalist_prob": 0.004,
-            "quarter_finalist_prob": 0.004,
-            "round_of_16_prob": 0.022,
-            "round_of_32_prob": 0.128
+            "champion_prob": 0.003,
+            "finalist_prob": 0.005,
+            "semi_finalist_prob": 0.012,
+            "quarter_finalist_prob": 0.012,
+            "round_of_16_prob": 0.047,
+            "round_of_32_prob": 0.134
         },
         "Uruguay": {
-            "champion_prob": 0.03,
-            "finalist_prob": 0.068,
-            "semi_finalist_prob": 0.148,
-            "quarter_finalist_prob": 0.148,
-            "round_of_16_prob": 0.356,
-            "round_of_32_prob": 0.562
+            "champion_prob": 0.033,
+            "finalist_prob": 0.063,
+            "semi_finalist_prob": 0.132,
+            "quarter_finalist_prob": 0.132,
+            "round_of_16_prob": 0.281,
+            "round_of_32_prob": 0.519
         },
         "France": {
-            "champion_prob": 0.048,
-            "finalist_prob": 0.108,
-            "semi_finalist_prob": 0.166,
-            "quarter_finalist_prob": 0.166,
-            "round_of_16_prob": 0.274,
-            "round_of_32_prob": 0.64
+            "champion_prob": 0.122,
+            "finalist_prob": 0.205,
+            "semi_finalist_prob": 0.281,
+            "quarter_finalist_prob": 0.281,
+            "round_of_16_prob": 0.421,
+            "round_of_32_prob": 0.772
         },
         "Senegal": {
-            "champion_prob": 0.006,
-            "finalist_prob": 0.018,
-            "semi_finalist_prob": 0.058,
-            "quarter_finalist_prob": 0.058,
-            "round_of_16_prob": 0.12,
-            "round_of_32_prob": 0.396
+            "champion_prob": 0.002,
+            "finalist_prob": 0.01,
+            "semi_finalist_prob": 0.036,
+            "quarter_finalist_prob": 0.036,
+            "round_of_16_prob": 0.105,
+            "round_of_32_prob": 0.397
         },
         "Iraq": {
             "champion_prob": 0.0,
             "finalist_prob": 0.0,
-            "semi_finalist_prob": 0.006,
-            "quarter_finalist_prob": 0.006,
-            "round_of_16_prob": 0.032,
-            "round_of_32_prob": 0.156
+            "semi_finalist_prob": 0.004,
+            "quarter_finalist_prob": 0.004,
+            "round_of_16_prob": 0.028,
+            "round_of_32_prob": 0.159
         },
         "Norway": {
             "champion_prob": 0.0,
             "finalist_prob": 0.0,
-            "semi_finalist_prob": 0.01,
-            "quarter_finalist_prob": 0.01,
+            "semi_finalist_prob": 0.004,
+            "quarter_finalist_prob": 0.004,
             "round_of_16_prob": 0.02,
-            "round_of_32_prob": 0.124
+            "round_of_32_prob": 0.08
         },
         "Argentina": {
-            "champion_prob": 0.182,
-            "finalist_prob": 0.294,
-            "semi_finalist_prob": 0.52,
-            "quarter_finalist_prob": 0.52,
-            "round_of_16_prob": 0.7,
-            "round_of_32_prob": 0.824
+            "champion_prob": 0.1,
+            "finalist_prob": 0.171,
+            "semi_finalist_prob": 0.424,
+            "quarter_finalist_prob": 0.424,
+            "round_of_16_prob": 0.682,
+            "round_of_32_prob": 0.798
         },
         "Algeria": {
             "champion_prob": 0.0,
-            "finalist_prob": 0.002,
-            "semi_finalist_prob": 0.01,
-            "quarter_finalist_prob": 0.01,
-            "round_of_16_prob": 0.05,
-            "round_of_32_prob": 0.28
+            "finalist_prob": 0.001,
+            "semi_finalist_prob": 0.006,
+            "quarter_finalist_prob": 0.006,
+            "round_of_16_prob": 0.044,
+            "round_of_32_prob": 0.222
         },
         "Austria": {
-            "champion_prob": 0.004,
-            "finalist_prob": 0.014,
-            "semi_finalist_prob": 0.046,
-            "quarter_finalist_prob": 0.046,
-            "round_of_16_prob": 0.108,
-            "round_of_32_prob": 0.296
+            "champion_prob": 0.001,
+            "finalist_prob": 0.005,
+            "semi_finalist_prob": 0.026,
+            "quarter_finalist_prob": 0.026,
+            "round_of_16_prob": 0.081,
+            "round_of_32_prob": 0.278
         },
         "Jordan": {
             "champion_prob": 0.0,
             "finalist_prob": 0.0,
             "semi_finalist_prob": 0.0,
             "quarter_finalist_prob": 0.0,
-            "round_of_16_prob": 0.006,
-            "round_of_32_prob": 0.06
+            "round_of_16_prob": 0.011,
+            "round_of_32_prob": 0.085
         },
         "Portugal": {
-            "champion_prob": 0.024,
-            "finalist_prob": 0.072,
-            "semi_finalist_prob": 0.146,
-            "quarter_finalist_prob": 0.146,
-            "round_of_16_prob": 0.274,
-            "round_of_32_prob": 0.458
+            "champion_prob": 0.051,
+            "finalist_prob": 0.086,
+            "semi_finalist_prob": 0.197,
+            "quarter_finalist_prob": 0.197,
+            "round_of_16_prob": 0.296,
+            "round_of_32_prob": 0.545
         },
         "DR Congo": {
             "champion_prob": 0.0,
-            "finalist_prob": 0.002,
-            "semi_finalist_prob": 0.002,
-            "quarter_finalist_prob": 0.002,
-            "round_of_16_prob": 0.012,
-            "round_of_32_prob": 0.07
+            "finalist_prob": 0.0,
+            "semi_finalist_prob": 0.003,
+            "quarter_finalist_prob": 0.003,
+            "round_of_16_prob": 0.014,
+            "round_of_32_prob": 0.063
         },
         "Uzbekistan": {
             "champion_prob": 0.0,
             "finalist_prob": 0.0,
             "semi_finalist_prob": 0.0,
             "quarter_finalist_prob": 0.0,
-            "round_of_16_prob": 0.002,
+            "round_of_16_prob": 0.001,
             "round_of_32_prob": 0.032
         },
         "Colombia": {
-            "champion_prob": 0.01,
-            "finalist_prob": 0.02,
-            "semi_finalist_prob": 0.062,
-            "quarter_finalist_prob": 0.062,
-            "round_of_16_prob": 0.23,
-            "round_of_32_prob": 0.35
+            "champion_prob": 0.013,
+            "finalist_prob": 0.028,
+            "semi_finalist_prob": 0.076,
+            "quarter_finalist_prob": 0.076,
+            "round_of_16_prob": 0.222,
+            "round_of_32_prob": 0.334
         },
         "England": {
-            "champion_prob": 0.054,
-            "finalist_prob": 0.086,
-            "semi_finalist_prob": 0.154,
-            "quarter_finalist_prob": 0.154,
-            "round_of_16_prob": 0.314,
-            "round_of_32_prob": 0.626
+            "champion_prob": 0.147,
+            "finalist_prob": 0.186,
+            "semi_finalist_prob": 0.282,
+            "quarter_finalist_prob": 0.282,
+            "round_of_16_prob": 0.469,
+            "round_of_32_prob": 0.731
         },
         "Croatia": {
-            "champion_prob": 0.016,
-            "finalist_prob": 0.046,
-            "semi_finalist_prob": 0.112,
-            "quarter_finalist_prob": 0.112,
-            "round_of_16_prob": 0.272,
-            "round_of_32_prob": 0.534
+            "champion_prob": 0.023,
+            "finalist_prob": 0.042,
+            "semi_finalist_prob": 0.088,
+            "quarter_finalist_prob": 0.088,
+            "round_of_16_prob": 0.214,
+            "round_of_32_prob": 0.457
         },
         "Ghana": {
-            "champion_prob": 0.002,
-            "finalist_prob": 0.004,
-            "semi_finalist_prob": 0.006,
-            "quarter_finalist_prob": 0.006,
-            "round_of_16_prob": 0.032,
-            "round_of_32_prob": 0.154
+            "champion_prob": 0.0,
+            "finalist_prob": 0.001,
+            "semi_finalist_prob": 0.009,
+            "quarter_finalist_prob": 0.009,
+            "round_of_16_prob": 0.024,
+            "round_of_32_prob": 0.128
         },
         "Panama": {
             "champion_prob": 0.0,
             "finalist_prob": 0.0,
-            "semi_finalist_prob": 0.002,
-            "quarter_finalist_prob": 0.002,
-            "round_of_16_prob": 0.018,
-            "round_of_32_prob": 0.078
+            "semi_finalist_prob": 0.003,
+            "quarter_finalist_prob": 0.003,
+            "round_of_16_prob": 0.008,
+            "round_of_32_prob": 0.065
         }
     },
     "sample_run": {
@@ -391,25 +391,25 @@
                 "match_id": "G_A_Mexico_South Africa",
                 "team_a": "Mexico",
                 "team_b": "South Africa",
-                "goals_a": 1,
-                "goals_b": 0,
+                "goals_a": 3,
+                "goals_b": 2,
                 "winner": "Mexico"
             },
             {
                 "match_id": "G_A_Mexico_South Korea",
                 "team_a": "Mexico",
                 "team_b": "South Korea",
-                "goals_a": 2,
-                "goals_b": 2,
-                "winner": "Draw"
+                "goals_a": 1,
+                "goals_b": 3,
+                "winner": "South Korea"
             },
             {
                 "match_id": "G_A_Mexico_Czechia",
                 "team_a": "Mexico",
                 "team_b": "Czechia",
-                "goals_a": 0,
-                "goals_b": 0,
-                "winner": "Draw"
+                "goals_a": 2,
+                "goals_b": 1,
+                "winner": "Mexico"
             },
             {
                 "match_id": "G_A_South Africa_South Korea",
@@ -431,24 +431,24 @@
                 "match_id": "G_A_South Korea_Czechia",
                 "team_a": "South Korea",
                 "team_b": "Czechia",
-                "goals_a": 4,
-                "goals_b": 2,
-                "winner": "South Korea"
+                "goals_a": 0,
+                "goals_b": 0,
+                "winner": "Draw"
             },
             {
                 "match_id": "G_B_Canada_Bosnia and Herzegovina",
                 "team_a": "Canada",
                 "team_b": "Bosnia and Herzegovina",
                 "goals_a": 2,
-                "goals_b": 1,
+                "goals_b": 0,
                 "winner": "Canada"
             },
             {
                 "match_id": "G_B_Canada_Qatar",
                 "team_a": "Canada",
                 "team_b": "Qatar",
-                "goals_a": 2,
-                "goals_b": 2,
+                "goals_a": 0,
+                "goals_b": 0,
                 "winner": "Draw"
             },
             {
@@ -463,56 +463,56 @@
                 "match_id": "G_B_Bosnia and Herzegovina_Qatar",
                 "team_a": "Bosnia and Herzegovina",
                 "team_b": "Qatar",
-                "goals_a": 0,
-                "goals_b": 2,
-                "winner": "Qatar"
+                "goals_a": 1,
+                "goals_b": 1,
+                "winner": "Draw"
             },
             {
                 "match_id": "G_B_Bosnia and Herzegovina_Switzerland",
                 "team_a": "Bosnia and Herzegovina",
                 "team_b": "Switzerland",
-                "goals_a": 1,
-                "goals_b": 2,
+                "goals_a": 0,
+                "goals_b": 1,
                 "winner": "Switzerland"
             },
             {
                 "match_id": "G_B_Qatar_Switzerland",
                 "team_a": "Qatar",
                 "team_b": "Switzerland",
-                "goals_a": 2,
-                "goals_b": 4,
+                "goals_a": 0,
+                "goals_b": 2,
                 "winner": "Switzerland"
             },
             {
                 "match_id": "G_C_Brazil_Morocco",
                 "team_a": "Brazil",
                 "team_b": "Morocco",
-                "goals_a": 3,
-                "goals_b": 2,
-                "winner": "Brazil"
+                "goals_a": 1,
+                "goals_b": 1,
+                "winner": "Draw"
             },
             {
                 "match_id": "G_C_Brazil_Haiti",
                 "team_a": "Brazil",
                 "team_b": "Haiti",
-                "goals_a": 5,
-                "goals_b": 3,
+                "goals_a": 2,
+                "goals_b": 1,
                 "winner": "Brazil"
             },
             {
                 "match_id": "G_C_Brazil_Scotland",
                 "team_a": "Brazil",
                 "team_b": "Scotland",
-                "goals_a": 2,
+                "goals_a": 1,
                 "goals_b": 1,
-                "winner": "Brazil"
+                "winner": "Draw"
             },
             {
                 "match_id": "G_C_Morocco_Haiti",
                 "team_a": "Morocco",
                 "team_b": "Haiti",
-                "goals_a": 3,
-                "goals_b": 2,
+                "goals_a": 1,
+                "goals_b": 0,
                 "winner": "Morocco"
             },
             {
@@ -520,31 +520,31 @@
                 "team_a": "Morocco",
                 "team_b": "Scotland",
                 "goals_a": 2,
-                "goals_b": 0,
-                "winner": "Morocco"
+                "goals_b": 3,
+                "winner": "Scotland"
             },
             {
                 "match_id": "G_C_Haiti_Scotland",
                 "team_a": "Haiti",
                 "team_b": "Scotland",
                 "goals_a": 2,
-                "goals_b": 4,
+                "goals_b": 3,
                 "winner": "Scotland"
             },
             {
                 "match_id": "G_D_United States_Paraguay",
                 "team_a": "United States",
                 "team_b": "Paraguay",
-                "goals_a": 3,
-                "goals_b": 2,
+                "goals_a": 5,
+                "goals_b": 3,
                 "winner": "United States"
             },
             {
                 "match_id": "G_D_United States_Australia",
                 "team_a": "United States",
                 "team_b": "Australia",
-                "goals_a": 0,
-                "goals_b": 0,
+                "goals_a": 2,
+                "goals_b": 2,
                 "winner": "Draw"
             },
             {
@@ -552,16 +552,16 @@
                 "team_a": "United States",
                 "team_b": "Turkey",
                 "goals_a": 1,
-                "goals_b": 3,
-                "winner": "Turkey"
+                "goals_b": 1,
+                "winner": "Draw"
             },
             {
                 "match_id": "G_D_Paraguay_Australia",
                 "team_a": "Paraguay",
                 "team_b": "Australia",
                 "goals_a": 0,
-                "goals_b": 2,
-                "winner": "Australia"
+                "goals_b": 0,
+                "winner": "Draw"
             },
             {
                 "match_id": "G_D_Paraguay_Turkey",
@@ -575,16 +575,16 @@
                 "match_id": "G_D_Australia_Turkey",
                 "team_a": "Australia",
                 "team_b": "Turkey",
-                "goals_a": 3,
-                "goals_b": 3,
-                "winner": "Draw"
+                "goals_a": 2,
+                "goals_b": 4,
+                "winner": "Turkey"
             },
             {
                 "match_id": "G_E_Germany_Curacao",
                 "team_a": "Germany",
                 "team_b": "Curacao",
-                "goals_a": 2,
-                "goals_b": 0,
+                "goals_a": 4,
+                "goals_b": 2,
                 "winner": "Germany"
             },
             {
@@ -592,71 +592,71 @@
                 "team_a": "Germany",
                 "team_b": "Ivory Coast",
                 "goals_a": 2,
-                "goals_b": 3,
-                "winner": "Ivory Coast"
+                "goals_b": 1,
+                "winner": "Germany"
             },
             {
                 "match_id": "G_E_Germany_Ecuador",
                 "team_a": "Germany",
                 "team_b": "Ecuador",
-                "goals_a": 1,
-                "goals_b": 1,
-                "winner": "Draw"
+                "goals_a": 3,
+                "goals_b": 2,
+                "winner": "Germany"
             },
             {
                 "match_id": "G_E_Curacao_Ivory Coast",
                 "team_a": "Curacao",
                 "team_b": "Ivory Coast",
-                "goals_a": 1,
-                "goals_b": 3,
+                "goals_a": 0,
+                "goals_b": 2,
                 "winner": "Ivory Coast"
             },
             {
                 "match_id": "G_E_Curacao_Ecuador",
                 "team_a": "Curacao",
                 "team_b": "Ecuador",
-                "goals_a": 0,
+                "goals_a": 1,
                 "goals_b": 1,
-                "winner": "Ecuador"
+                "winner": "Draw"
             },
             {
                 "match_id": "G_E_Ivory Coast_Ecuador",
                 "team_a": "Ivory Coast",
                 "team_b": "Ecuador",
-                "goals_a": 2,
+                "goals_a": 3,
                 "goals_b": 2,
-                "winner": "Draw"
+                "winner": "Ivory Coast"
             },
             {
                 "match_id": "G_F_Netherlands_Japan",
                 "team_a": "Netherlands",
                 "team_b": "Japan",
-                "goals_a": 0,
+                "goals_a": 1,
                 "goals_b": 1,
-                "winner": "Japan"
+                "winner": "Draw"
             },
             {
                 "match_id": "G_F_Netherlands_Sweden",
                 "team_a": "Netherlands",
                 "team_b": "Sweden",
                 "goals_a": 1,
-                "goals_b": 0,
-                "winner": "Netherlands"
+                "goals_b": 1,
+                "winner": "Draw"
             },
             {
                 "match_id": "G_F_Netherlands_Tunisia",
                 "team_a": "Netherlands",
                 "team_b": "Tunisia",
                 "goals_a": 1,
-                "goals_b": 1,
-                "winner": "Draw"
+                "goals_b": 3,
+                "winner": "Tunisia"
             },
             {
                 "match_id": "G_F_Japan_Sweden",
                 "team_a": "Japan",
                 "team_b": "Sweden",
-                "goals_a": 1,
-                "goals_b": 0,
+                "goals_a": 3,
+                "goals_b": 1,
                 "winner": "Japan"
             },
             {
@@ -671,8 +671,8 @@
                 "match_id": "G_F_Sweden_Tunisia",
                 "team_a": "Sweden",
                 "team_b": "Tunisia",
-                "goals_a": 0,
-                "goals_b": 0,
+                "goals_a": 1,
+                "goals_b": 1,
                 "winner": "Draw"
             },
             {
@@ -687,121 +687,121 @@
                 "match_id": "G_G_Belgium_Iran",
                 "team_a": "Belgium",
                 "team_b": "Iran",
-                "goals_a": 4,
+                "goals_a": 1,
                 "goals_b": 2,
-                "winner": "Belgium"
+                "winner": "Iran"
             },
             {
                 "match_id": "G_G_Belgium_New Zealand",
                 "team_a": "Belgium",
                 "team_b": "New Zealand",
-                "goals_a": 1,
-                "goals_b": 1,
-                "winner": "Draw"
+                "goals_a": 5,
+                "goals_b": 4,
+                "winner": "Belgium"
             },
             {
                 "match_id": "G_G_Egypt_Iran",
                 "team_a": "Egypt",
                 "team_b": "Iran",
-                "goals_a": 2,
-                "goals_b": 3,
+                "goals_a": 3,
+                "goals_b": 5,
                 "winner": "Iran"
             },
             {
                 "match_id": "G_G_Egypt_New Zealand",
                 "team_a": "Egypt",
                 "team_b": "New Zealand",
-                "goals_a": 4,
-                "goals_b": 4,
+                "goals_a": 0,
+                "goals_b": 0,
                 "winner": "Draw"
             },
             {
                 "match_id": "G_G_Iran_New Zealand",
                 "team_a": "Iran",
                 "team_b": "New Zealand",
-                "goals_a": 3,
+                "goals_a": 2,
                 "goals_b": 2,
-                "winner": "Iran"
+                "winner": "Draw"
             },
             {
                 "match_id": "G_H_Spain_Cape Verde",
                 "team_a": "Spain",
                 "team_b": "Cape Verde",
-                "goals_a": 3,
-                "goals_b": 2,
+                "goals_a": 1,
+                "goals_b": 0,
                 "winner": "Spain"
             },
             {
                 "match_id": "G_H_Spain_Saudi Arabia",
                 "team_a": "Spain",
                 "team_b": "Saudi Arabia",
-                "goals_a": 1,
-                "goals_b": 1,
-                "winner": "Draw"
+                "goals_a": 2,
+                "goals_b": 0,
+                "winner": "Spain"
             },
             {
                 "match_id": "G_H_Spain_Uruguay",
                 "team_a": "Spain",
                 "team_b": "Uruguay",
-                "goals_a": 2,
+                "goals_a": 3,
                 "goals_b": 3,
-                "winner": "Uruguay"
+                "winner": "Draw"
             },
             {
                 "match_id": "G_H_Cape Verde_Saudi Arabia",
                 "team_a": "Cape Verde",
                 "team_b": "Saudi Arabia",
                 "goals_a": 0,
-                "goals_b": 1,
-                "winner": "Saudi Arabia"
+                "goals_b": 0,
+                "winner": "Draw"
             },
             {
                 "match_id": "G_H_Cape Verde_Uruguay",
                 "team_a": "Cape Verde",
                 "team_b": "Uruguay",
-                "goals_a": 0,
-                "goals_b": 1,
-                "winner": "Uruguay"
+                "goals_a": 5,
+                "goals_b": 4,
+                "winner": "Cape Verde"
             },
             {
                 "match_id": "G_H_Saudi Arabia_Uruguay",
                 "team_a": "Saudi Arabia",
                 "team_b": "Uruguay",
-                "goals_a": 3,
-                "goals_b": 2,
-                "winner": "Saudi Arabia"
+                "goals_a": 2,
+                "goals_b": 3,
+                "winner": "Uruguay"
             },
             {
                 "match_id": "G_I_France_Senegal",
                 "team_a": "France",
                 "team_b": "Senegal",
-                "goals_a": 2,
-                "goals_b": 1,
-                "winner": "France"
+                "goals_a": 0,
+                "goals_b": 0,
+                "winner": "Draw"
             },
             {
                 "match_id": "G_I_France_Iraq",
                 "team_a": "France",
                 "team_b": "Iraq",
                 "goals_a": 1,
-                "goals_b": 1,
-                "winner": "Draw"
+                "goals_b": 0,
+                "winner": "France"
             },
             {
                 "match_id": "G_I_France_Norway",
                 "team_a": "France",
                 "team_b": "Norway",
-                "goals_a": 3,
-                "goals_b": 1,
+                "goals_a": 4,
+                "goals_b": 3,
                 "winner": "France"
             },
             {
                 "match_id": "G_I_Senegal_Iraq",
                 "team_a": "Senegal",
                 "team_b": "Iraq",
-                "goals_a": 1,
-                "goals_b": 1,
-                "winner": "Draw"
+                "goals_a": 2,
+                "goals_b": 0,
+                "winner": "Senegal"
             },
             {
                 "match_id": "G_I_Senegal_Norway",
@@ -816,88 +816,88 @@
                 "team_a": "Iraq",
                 "team_b": "Norway",
                 "goals_a": 4,
-                "goals_b": 3,
+                "goals_b": 2,
                 "winner": "Iraq"
             },
             {
                 "match_id": "G_J_Argentina_Algeria",
                 "team_a": "Argentina",
                 "team_b": "Algeria",
-                "goals_a": 2,
-                "goals_b": 0,
+                "goals_a": 3,
+                "goals_b": 1,
                 "winner": "Argentina"
             },
             {
                 "match_id": "G_J_Argentina_Austria",
                 "team_a": "Argentina",
                 "team_b": "Austria",
-                "goals_a": 2,
-                "goals_b": 0,
-                "winner": "Argentina"
+                "goals_a": 1,
+                "goals_b": 1,
+                "winner": "Draw"
             },
             {
                 "match_id": "G_J_Argentina_Jordan",
                 "team_a": "Argentina",
                 "team_b": "Jordan",
                 "goals_a": 0,
-                "goals_b": 1,
+                "goals_b": 2,
                 "winner": "Jordan"
             },
             {
                 "match_id": "G_J_Algeria_Austria",
                 "team_a": "Algeria",
                 "team_b": "Austria",
-                "goals_a": 2,
-                "goals_b": 0,
+                "goals_a": 4,
+                "goals_b": 3,
                 "winner": "Algeria"
             },
             {
                 "match_id": "G_J_Algeria_Jordan",
                 "team_a": "Algeria",
                 "team_b": "Jordan",
-                "goals_a": 2,
-                "goals_b": 2,
-                "winner": "Draw"
+                "goals_a": 1,
+                "goals_b": 3,
+                "winner": "Jordan"
             },
             {
                 "match_id": "G_J_Austria_Jordan",
                 "team_a": "Austria",
                 "team_b": "Jordan",
                 "goals_a": 0,
-                "goals_b": 2,
-                "winner": "Jordan"
+                "goals_b": 0,
+                "winner": "Draw"
             },
             {
                 "match_id": "G_K_Portugal_DR Congo",
                 "team_a": "Portugal",
                 "team_b": "DR Congo",
-                "goals_a": 3,
+                "goals_a": 2,
                 "goals_b": 2,
-                "winner": "Portugal"
+                "winner": "Draw"
             },
             {
                 "match_id": "G_K_Portugal_Uzbekistan",
                 "team_a": "Portugal",
                 "team_b": "Uzbekistan",
-                "goals_a": 1,
-                "goals_b": 1,
+                "goals_a": 0,
+                "goals_b": 0,
                 "winner": "Draw"
             },
             {
                 "match_id": "G_K_Portugal_Colombia",
                 "team_a": "Portugal",
                 "team_b": "Colombia",
-                "goals_a": 0,
-                "goals_b": 1,
-                "winner": "Colombia"
+                "goals_a": 1,
+                "goals_b": 0,
+                "winner": "Portugal"
             },
             {
                 "match_id": "G_K_DR Congo_Uzbekistan",
                 "team_a": "DR Congo",
                 "team_b": "Uzbekistan",
-                "goals_a": 0,
+                "goals_a": 2,
                 "goals_b": 1,
-                "winner": "Uzbekistan"
+                "winner": "DR Congo"
             },
             {
                 "match_id": "G_K_DR Congo_Colombia",
@@ -919,48 +919,48 @@
                 "match_id": "G_L_England_Croatia",
                 "team_a": "England",
                 "team_b": "Croatia",
-                "goals_a": 4,
-                "goals_b": 4,
+                "goals_a": 1,
+                "goals_b": 1,
                 "winner": "Draw"
             },
             {
                 "match_id": "G_L_England_Ghana",
                 "team_a": "England",
                 "team_b": "Ghana",
-                "goals_a": 0,
-                "goals_b": 0,
+                "goals_a": 1,
+                "goals_b": 1,
                 "winner": "Draw"
             },
             {
                 "match_id": "G_L_England_Panama",
                 "team_a": "England",
                 "team_b": "Panama",
-                "goals_a": 5,
-                "goals_b": 4,
-                "winner": "England"
+                "goals_a": 1,
+                "goals_b": 1,
+                "winner": "Draw"
             },
             {
                 "match_id": "G_L_Croatia_Ghana",
                 "team_a": "Croatia",
                 "team_b": "Ghana",
-                "goals_a": 1,
-                "goals_b": 1,
-                "winner": "Draw"
+                "goals_a": 4,
+                "goals_b": 2,
+                "winner": "Croatia"
             },
             {
                 "match_id": "G_L_Croatia_Panama",
                 "team_a": "Croatia",
                 "team_b": "Panama",
                 "goals_a": 2,
-                "goals_b": 1,
-                "winner": "Croatia"
+                "goals_b": 2,
+                "winner": "Draw"
             },
             {
                 "match_id": "G_L_Ghana_Panama",
                 "team_a": "Ghana",
                 "team_b": "Panama",
-                "goals_a": 0,
-                "goals_b": 0,
+                "goals_a": 1,
+                "goals_b": 1,
                 "winner": "Draw"
             }
         ],
@@ -968,9 +968,9 @@
             {
                 "match_id": "R32_1",
                 "team_a": "South Korea",
-                "team_b": "Germany",
-                "goals_a": 2,
-                "goals_b": 0,
+                "team_b": "Cape Verde",
+                "goals_a": 3,
+                "goals_b": 2,
                 "winner": "South Korea"
             },
             {
@@ -978,85 +978,85 @@
                 "team_a": "Mexico",
                 "team_b": "Canada",
                 "goals_a": 2,
-                "goals_b": 4,
-                "winner": "Canada"
+                "goals_b": 0,
+                "winner": "Mexico"
             },
             {
                 "match_id": "R32_3",
                 "team_a": "Switzerland",
-                "team_b": "Qatar",
-                "goals_a": 1,
-                "goals_b": 0,
+                "team_b": "DR Congo",
+                "goals_a": 7,
+                "goals_b": 5,
                 "winner": "Switzerland"
             },
             {
                 "match_id": "R32_4",
-                "team_a": "Brazil",
-                "team_b": "Netherlands",
+                "team_a": "Scotland",
+                "team_b": "Tunisia",
                 "goals_a": 2,
-                "goals_b": 0,
-                "winner": "Brazil"
+                "goals_b": 4,
+                "winner": "Tunisia"
             },
             {
                 "match_id": "R32_5",
                 "team_a": "Turkey",
-                "team_b": "Spain",
-                "goals_a": 0,
-                "goals_b": 2,
-                "winner": "Spain"
+                "team_b": "Morocco",
+                "goals_a": 1,
+                "goals_b": 0,
+                "winner": "Turkey"
             },
             {
                 "match_id": "R32_6",
-                "team_a": "Morocco",
-                "team_b": "Australia",
-                "goals_a": 2,
-                "goals_b": 0,
-                "winner": "Morocco"
+                "team_a": "Brazil",
+                "team_b": "United States",
+                "goals_a": 4,
+                "goals_b": 3,
+                "winner": "Brazil"
             },
             {
                 "match_id": "R32_7",
-                "team_a": "Ivory Coast",
+                "team_a": "Germany",
                 "team_b": "Uruguay",
-                "goals_a": 2,
-                "goals_b": 1,
-                "winner": "Ivory Coast"
+                "goals_a": 4,
+                "goals_b": 3,
+                "winner": "Germany"
             },
             {
                 "match_id": "R32_8",
                 "team_a": "Japan",
-                "team_b": "Algeria",
+                "team_b": "South Africa",
                 "goals_a": 3,
-                "goals_b": 1,
+                "goals_b": 2,
                 "winner": "Japan"
             },
             {
                 "match_id": "R32_9",
                 "team_a": "Iran",
-                "team_b": "United States",
-                "goals_a": 4,
-                "goals_b": 2,
-                "winner": "Iran"
+                "team_b": "England",
+                "goals_a": 3,
+                "goals_b": 4,
+                "winner": "England"
             },
             {
                 "match_id": "R32_10",
-                "team_a": "Ecuador",
-                "team_b": "Netherlands",
+                "team_a": "Ivory Coast",
+                "team_b": "Tunisia",
                 "goals_a": 2,
                 "goals_b": 3,
-                "winner": "Netherlands"
+                "winner": "Tunisia"
             },
             {
                 "match_id": "R32_11",
-                "team_a": "Saudi Arabia",
-                "team_b": "Uzbekistan",
-                "goals_a": 2,
-                "goals_b": 0,
-                "winner": "Saudi Arabia"
+                "team_a": "Spain",
+                "team_b": "Iraq",
+                "goals_a": 3,
+                "goals_b": 1,
+                "winner": "Spain"
             },
             {
                 "match_id": "R32_12",
                 "team_a": "France",
-                "team_b": "Croatia",
+                "team_b": "Panama",
                 "goals_a": 3,
                 "goals_b": 1,
                 "winner": "France"
@@ -1064,99 +1064,99 @@
             {
                 "match_id": "R32_13",
                 "team_a": "Jordan",
-                "team_b": "South Africa",
-                "goals_a": 0,
-                "goals_b": 1,
-                "winner": "South Africa"
+                "team_b": "Algeria",
+                "goals_a": 2,
+                "goals_b": 4,
+                "winner": "Algeria"
             },
             {
                 "match_id": "R32_14",
-                "team_a": "Iraq",
+                "team_a": "Senegal",
                 "team_b": "Argentina",
-                "goals_a": 2,
-                "goals_b": 3,
+                "goals_a": 6,
+                "goals_b": 8,
                 "winner": "Argentina"
             },
             {
                 "match_id": "R32_15",
                 "team_a": "Colombia",
                 "team_b": "Mexico",
-                "goals_a": 1,
-                "goals_b": 0,
+                "goals_a": 3,
+                "goals_b": 2,
                 "winner": "Colombia"
             },
             {
                 "match_id": "R32_16",
-                "team_a": "England",
-                "team_b": "Ghana",
-                "goals_a": 3,
-                "goals_b": 1,
-                "winner": "England"
+                "team_a": "Croatia",
+                "team_b": "New Zealand",
+                "goals_a": 2,
+                "goals_b": 0,
+                "winner": "Croatia"
             }
         ],
         "r16_matches": [
             {
                 "match_id": "R16_1",
                 "team_a": "South Korea",
-                "team_b": "Canada",
-                "goals_a": 3,
-                "goals_b": 1,
+                "team_b": "Mexico",
+                "goals_a": 1,
+                "goals_b": 0,
                 "winner": "South Korea"
             },
             {
                 "match_id": "R16_2",
                 "team_a": "Switzerland",
-                "team_b": "Brazil",
-                "goals_a": 1,
-                "goals_b": 3,
-                "winner": "Brazil"
+                "team_b": "Tunisia",
+                "goals_a": 0,
+                "goals_b": 2,
+                "winner": "Tunisia"
             },
             {
                 "match_id": "R16_3",
+                "team_a": "Turkey",
+                "team_b": "Brazil",
+                "goals_a": 1,
+                "goals_b": 0,
+                "winner": "Turkey"
+            },
+            {
+                "match_id": "R16_4",
+                "team_a": "Germany",
+                "team_b": "Japan",
+                "goals_a": 0,
+                "goals_b": 1,
+                "winner": "Japan"
+            },
+            {
+                "match_id": "R16_5",
+                "team_a": "England",
+                "team_b": "Tunisia",
+                "goals_a": 2,
+                "goals_b": 1,
+                "winner": "England"
+            },
+            {
+                "match_id": "R16_6",
                 "team_a": "Spain",
-                "team_b": "Morocco",
+                "team_b": "France",
                 "goals_a": 3,
                 "goals_b": 1,
                 "winner": "Spain"
             },
             {
-                "match_id": "R16_4",
-                "team_a": "Ivory Coast",
-                "team_b": "Japan",
-                "goals_a": 1,
-                "goals_b": 2,
-                "winner": "Japan"
-            },
-            {
-                "match_id": "R16_5",
-                "team_a": "Iran",
-                "team_b": "Netherlands",
-                "goals_a": 1,
-                "goals_b": 0,
-                "winner": "Iran"
-            },
-            {
-                "match_id": "R16_6",
-                "team_a": "Saudi Arabia",
-                "team_b": "France",
-                "goals_a": 2,
-                "goals_b": 3,
-                "winner": "France"
-            },
-            {
                 "match_id": "R16_7",
-                "team_a": "South Africa",
+                "team_a": "Algeria",
                 "team_b": "Argentina",
-                "goals_a": 2,
-                "goals_b": 3,
+                "goals_a": 0,
+                "goals_b": 2,
                 "winner": "Argentina"
             },
             {
                 "match_id": "R16_8",
                 "team_a": "Colombia",
-                "team_b": "England",
-                "goals_a": 2,
-                "goals_b": 0,
+                "team_b": "Croatia",
+                "goals_a": 3,
+                "goals_b": 2,
                 "winner": "Colombia"
             }
         ],
@@ -1164,62 +1164,62 @@
             {
                 "match_id": "QF_1",
                 "team_a": "South Korea",
-                "team_b": "Brazil",
-                "goals_a": 3,
-                "goals_b": 1,
-                "winner": "South Korea"
+                "team_b": "Tunisia",
+                "goals_a": 1,
+                "goals_b": 3,
+                "winner": "Tunisia"
             },
             {
                 "match_id": "QF_2",
-                "team_a": "Spain",
+                "team_a": "Turkey",
                 "team_b": "Japan",
-                "goals_a": 1,
+                "goals_a": 2,
                 "goals_b": 0,
-                "winner": "Spain"
+                "winner": "Turkey"
             },
             {
                 "match_id": "QF_3",
-                "team_a": "Iran",
-                "team_b": "France",
-                "goals_a": 3,
-                "goals_b": 4,
-                "winner": "France"
+                "team_a": "England",
+                "team_b": "Spain",
+                "goals_a": 2,
+                "goals_b": 0,
+                "winner": "England"
             },
             {
                 "match_id": "QF_4",
                 "team_a": "Argentina",
                 "team_b": "Colombia",
-                "goals_a": 2,
-                "goals_b": 3,
-                "winner": "Colombia"
+                "goals_a": 3,
+                "goals_b": 2,
+                "winner": "Argentina"
             }
         ],
         "sf_matches": [
             {
                 "match_id": "SF_1",
-                "team_a": "South Korea",
-                "team_b": "Spain",
+                "team_a": "Tunisia",
+                "team_b": "Turkey",
                 "goals_a": 0,
                 "goals_b": 1,
-                "winner": "Spain"
+                "winner": "Turkey"
             },
             {
                 "match_id": "SF_2",
-                "team_a": "France",
-                "team_b": "Colombia",
-                "goals_a": 1,
-                "goals_b": 0,
-                "winner": "France"
+                "team_a": "England",
+                "team_b": "Argentina",
+                "goals_a": 0,
+                "goals_b": 1,
+                "winner": "Argentina"
             }
         ],
         "final_match": {
             "match_id": "FINAL",
-            "team_a": "Spain",
-            "team_b": "France",
-            "goals_a": 1,
-            "goals_b": 2,
-            "winner": "France"
+            "team_a": "Turkey",
+            "team_b": "Argentina",
+            "goals_a": 0,
+            "goals_b": 1,
+            "winner": "Argentina"
         }
     },
-    "n_simulations": 500
+    "n_simulations": 1000
 }

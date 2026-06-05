@@ -131,12 +131,31 @@ class MatchPredictor:
         # model outputs class order: 0 (Team A Win), 1 (Draw), 2 (Team B Win)
         probs = self.model.predict_proba(X_match)[0]
         
+        # Apply 2026 pre-tournament calibration
+        s_a = getattr(config, "TEAM_CALIBRATION", {}).get(team_a, 0.0)
+        s_b = getattr(config, "TEAM_CALIBRATION", {}).get(team_b, 0.0)
+        diff = s_a - s_b
+        
+        if diff != 0:
+            p_a = float(probs[0]) * np.exp(diff)
+            p_draw = float(probs[1])
+            p_b = float(probs[2]) * np.exp(-diff)
+            total = p_a + p_draw + p_b
+            if total > 0:
+                p_a /= total
+                p_draw /= total
+                p_b /= total
+            else:
+                p_a, p_draw, p_b = float(probs[0]), float(probs[1]), float(probs[2])
+        else:
+            p_a, p_draw, p_b = float(probs[0]), float(probs[1]), float(probs[2])
+            
         result = {
             "team_a": team_a,
             "team_b": team_b,
-            "team_a_win": float(probs[0]),
-            "draw": float(probs[1]),
-            "team_b_win": float(probs[2])
+            "team_a_win": p_a,
+            "draw": p_draw,
+            "team_b_win": p_b
         }
         
         # Store in cache

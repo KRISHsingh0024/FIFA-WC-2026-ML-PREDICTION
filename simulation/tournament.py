@@ -298,4 +298,5 @@ def run_monte_carlo(n_simulations: int = config.NUM_SIMULATIONS):
     return stats
 
 if __name__ == "__main__":
-    run_monte_carlo(100) # Quick test with 100 runs
+    run_monte_carlo(1000) # Official simulation runs
+

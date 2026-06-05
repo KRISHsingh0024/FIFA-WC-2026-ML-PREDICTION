@@ -242,8 +242,29 @@ POSITION_GROUPS = {
     "Midfielder": ["MF", "CM", "DM", "AM", "LM", "RM", "CDM", "CAM"],
     "Forward": ["FW", "LW", "RW", "CF", "ST", "SS"],
 }
+# ─── 2026 World Cup Outlook Calibration ─────────────────────────────────────
+# Calibrates prediction probabilities to match the June 2026 pre-tournament context 
+# (current squad strength, bookmaker odds, and Opta supercomputer favorites).
+# Higher values boost a team's win probability, negative values decrease it.
+TEAM_CALIBRATION = {
+    "Spain": 0.2243,
+    "France": 0.2980,
+    "England": 0.3286,
+    "Argentina": -0.1123,
+    "Portugal": 0.1823,
+    "Brazil": -0.1669,
+    "Germany": 0.1566,
+    "Netherlands": -0.0135,
+    "Uruguay": -0.0218,
+    "Colombia": 0.1066,
+    "United States": -0.1336,
+    "Mexico": -0.1897,
+    "Morocco": -0.1084
+}
+
 
 # ─── SMTP Configuration ──────────────────────────────────────────────────────
+
 SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "465"))
 SMTP_USER = os.getenv("SMTP_USER", "")
