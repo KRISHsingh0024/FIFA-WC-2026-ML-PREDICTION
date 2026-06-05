@@ -1549,8 +1549,18 @@ function SimulatorView({ simResults, simulating, triggerSimulationRun, user, set
     setPicks(newPicks);
   }
 
-  // Fetch locked predictions if user logged in
+  // Fetch locked predictions if user logged in, or pre-populate with ML predictions
   useEffect(() => {
+    const getMlPicks = () => {
+      if (!sample) return {};
+      const mlPicks = {};
+      sample.r16_matches.forEach((m, idx) => { mlPicks[`R16-${idx + 1}`] = m.winner; });
+      sample.qf_matches.forEach((m, idx) => { mlPicks[`QF-${idx + 1}`] = m.winner; });
+      sample.sf_matches.forEach((m, idx) => { mlPicks[`SF-${idx + 1}`] = m.winner; });
+      mlPicks['FINAL'] = sample.final_match.winner;
+      return mlPicks;
+    };
+
     if (user?.email) {
       fetch(`/api/predictions/locked?email=${encodeURIComponent(user.email)}`)
         .then(res => res.json())
@@ -1560,15 +1570,18 @@ function SimulatorView({ simResults, simulating, triggerSimulationRun, user, set
             setPicks(data.predictions)
           } else {
             setLockedPicks(null)
-            setPicks({})
+            setPicks(getMlPicks())
           }
         })
-        .catch(err => console.error("Error loading locked predictions:", err))
+        .catch(err => {
+          console.error("Error loading locked predictions:", err);
+          setPicks(getMlPicks());
+        })
     } else {
       setLockedPicks(null)
-      setPicks({})
+      setPicks(getMlPicks())
     }
-  }, [user])
+  }, [user, sample])
 
   const cleanDownstream = (updatedPicks) => {
     // QF-1 teams
