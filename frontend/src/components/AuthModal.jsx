@@ -211,7 +211,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 15 }}
         transition={{ type: "spring", damping: 25, stiffness: 350 }}
-        className="glass-panel w-full max-w-[400px] overflow-hidden p-6 relative z-10 flex flex-col items-center bg-[#070e15]/90 border border-white/[0.08] shadow-[0_32px_64px_rgba(0,0,0,0.8)]"
+        className="w-full max-w-[400px] overflow-hidden p-6 relative z-10 flex flex-col items-center bg-[#0a1118] border border-white/[0.08] rounded-2xl shadow-[0_32px_64px_rgba(0,0,0,0.9)]"
       >
         {/* Close Button */}
         <button 
