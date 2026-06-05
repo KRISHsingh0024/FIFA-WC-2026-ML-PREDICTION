@@ -123,6 +123,10 @@ class ArenaPredictRequest(BaseModel):
     score_a: int
     score_b: int
 
+class LockPredictionsRequest(BaseModel):
+    email: str
+    predictions: dict
+
 # ─── API Endpoints ────────────────────────────────────────────────────────────
 @app.get("/api/config")
 def get_config():
@@ -253,6 +257,24 @@ def set_injuries(req: InjuryRequest):
 
 # ─── Leaderboard Database Helpers ─────────────────────────────────────────────
 LEADERBOARD_PATH = os.path.join(config.DATA_DIR, "arena_leaderboard.json")
+LOCKED_PREDS_PATH = os.path.join(config.DATA_DIR, "locked_predictions.json")
+
+def load_locked_predictions():
+    if not os.path.exists(LOCKED_PREDS_PATH):
+        return {}
+    try:
+        with open(LOCKED_PREDS_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Error loading locked predictions: {e}")
+        return {}
+
+def save_locked_predictions(data):
+    try:
+        with open(LOCKED_PREDS_PATH, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4)
+    except Exception as e:
+        print(f"Error saving locked predictions: {e}")
 
 def init_leaderboard():
     if not os.path.exists(LEADERBOARD_PATH):
@@ -592,6 +614,32 @@ def get_leaderboard():
     # Sort leaderboard by points descending
     sorted_leaderboard = sorted(leaderboard, key=lambda x: x.get("points", 0), reverse=True)
     return {"leaderboard": sorted_leaderboard}
+
+@app.post("/api/predictions/lock")
+def lock_predictions(req: LockPredictionsRequest):
+    email = req.email.strip().lower()
+    if not email:
+        raise HTTPException(status_code=400, detail="Email is required.")
+    
+    preds_db = load_locked_predictions()
+    preds_db[email] = req.predictions
+    save_locked_predictions(preds_db)
+    
+    return {"status": "success", "msg": "Predictions locked successfully."}
+
+@app.get("/api/predictions/locked")
+def get_locked_predictions(email: str):
+    email = email.strip().lower()
+    if not email:
+        raise HTTPException(status_code=400, detail="Email is required.")
+        
+    preds_db = load_locked_predictions()
+    user_preds = preds_db.get(email)
+    
+    if not user_preds:
+        return {"status": "not_found", "predictions": None}
+        
+    return {"status": "success", "predictions": user_preds}
 
 # ─── Helper Functions ─────────────────────────────────────────────────────────
 def get_confederation(team_name: str) -> str:

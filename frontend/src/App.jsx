@@ -503,6 +503,8 @@ export default function App() {
                   simResults={simResults}
                   simulating={simulating}
                   triggerSimulationRun={triggerSimulationRun}
+                  user={user}
+                  setAuthModalOpen={setAuthModalOpen}
                 />
               )}
               {activeTab === 'arena' && (
@@ -1507,11 +1509,201 @@ const getBracketPath = (x1, y1, x2, y2, side, r = 8) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 //  SIMULATOR VIEW
 // ═══════════════════════════════════════════════════════════════════════════════
-function SimulatorView({ simResults, simulating, triggerSimulationRun }) {
+function SimulatorView({ simResults, simulating, triggerSimulationRun, user, setAuthModalOpen }) {
   const sample = simResults?.sample_run
   const sim_stats = simResults?.sim_stats || {}
   const containerRef = useRef(null)
   const [paths, setPaths] = useState([])
+  const [simTab, setSimTab] = useState('monte_carlo')
+  
+  // Interactive bracket states
+  const [picks, setPicks] = useState({})
+  const [lockedPicks, setLockedPicks] = useState(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [selectedMatch, setSelectedMatch] = useState(null)
+  const [matchOdds, setMatchOdds] = useState(null)
+  const [oddsLoading, setOddsLoading] = useState(false)
+
+  // Fetch locked predictions if user logged in
+  useEffect(() => {
+    if (user?.email) {
+      fetch(`/api/predictions/locked?email=${encodeURIComponent(user.email)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'success' && data.predictions) {
+            setLockedPicks(data.predictions)
+            setPicks(data.predictions)
+          } else {
+            setLockedPicks(null)
+            setPicks({})
+          }
+        })
+        .catch(err => console.error("Error loading locked predictions:", err))
+    } else {
+      setLockedPicks(null)
+      setPicks({})
+    }
+  }, [user])
+
+  const cleanDownstream = (updatedPicks) => {
+    // QF-1 teams
+    const qf1_a = updatedPicks['R16-1'];
+    const qf1_b = updatedPicks['R16-2'];
+    if (updatedPicks['QF-1'] && updatedPicks['QF-1'] !== qf1_a && updatedPicks['QF-1'] !== qf1_b) {
+      delete updatedPicks['QF-1'];
+    }
+    
+    // QF-2 teams
+    const qf2_a = updatedPicks['R16-3'];
+    const qf2_b = updatedPicks['R16-4'];
+    if (updatedPicks['QF-2'] && updatedPicks['QF-2'] !== qf2_a && updatedPicks['QF-2'] !== qf2_b) {
+      delete updatedPicks['QF-2'];
+    }
+
+    // QF-3 teams
+    const qf3_a = updatedPicks['R16-5'];
+    const qf3_b = updatedPicks['R16-6'];
+    if (updatedPicks['QF-3'] && updatedPicks['QF-3'] !== qf3_a && updatedPicks['QF-3'] !== qf3_b) {
+      delete updatedPicks['QF-3'];
+    }
+
+    // QF-4 teams
+    const qf4_a = updatedPicks['R16-7'];
+    const qf4_b = updatedPicks['R16-8'];
+    if (updatedPicks['QF-4'] && updatedPicks['QF-4'] !== qf4_a && updatedPicks['QF-4'] !== qf4_b) {
+      delete updatedPicks['QF-4'];
+    }
+
+    // SF-1 teams
+    const sf1_a = updatedPicks['QF-1'];
+    const sf1_b = updatedPicks['QF-2'];
+    if (updatedPicks['SF-1'] && updatedPicks['SF-1'] !== sf1_a && updatedPicks['SF-1'] !== sf1_b) {
+      delete updatedPicks['SF-1'];
+    }
+
+    // SF-2 teams
+    const sf2_a = updatedPicks['QF-3'];
+    const sf2_b = updatedPicks['QF-4'];
+    if (updatedPicks['SF-2'] && updatedPicks['SF-2'] !== sf2_a && updatedPicks['SF-2'] !== sf2_b) {
+      delete updatedPicks['SF-2'];
+    }
+
+    // FINAL teams
+    const final_a = updatedPicks['SF-1'];
+    const final_b = updatedPicks['SF-2'];
+    if (updatedPicks['FINAL'] && updatedPicks['FINAL'] !== final_a && updatedPicks['FINAL'] !== final_b) {
+      delete updatedPicks['FINAL'];
+    }
+  }
+
+  const getInteractiveMatch = (nodeId) => {
+    if (nodeId.startsWith('R16-')) {
+      const idx = parseInt(nodeId.split('-')[1]) - 1;
+      const baseMatch = sample?.r16_matches[idx];
+      return {
+        nodeId,
+        team_a: baseMatch?.team_a || '',
+        team_b: baseMatch?.team_b || '',
+        winner: picks[nodeId] || ''
+      };
+    }
+    if (nodeId === 'QF-1') {
+      return { nodeId, team_a: picks['R16-1'] || '', team_b: picks['R16-2'] || '', winner: picks['QF-1'] || '' };
+    }
+    if (nodeId === 'QF-2') {
+      return { nodeId, team_a: picks['R16-3'] || '', team_b: picks['R16-4'] || '', winner: picks['QF-2'] || '' };
+    }
+    if (nodeId === 'QF-3') {
+      return { nodeId, team_a: picks['R16-5'] || '', team_b: picks['R16-6'] || '', winner: picks['QF-3'] || '' };
+    }
+    if (nodeId === 'QF-4') {
+      return { nodeId, team_a: picks['R16-7'] || '', team_b: picks['R16-8'] || '', winner: picks['QF-4'] || '' };
+    }
+    if (nodeId === 'SF-1') {
+      return { nodeId, team_a: picks['QF-1'] || '', team_b: picks['QF-2'] || '', winner: picks['SF-1'] || '' };
+    }
+    if (nodeId === 'SF-2') {
+      return { nodeId, team_a: picks['QF-3'] || '', team_b: picks['QF-4'] || '', winner: picks['SF-2'] || '' };
+    }
+    if (nodeId === 'FINAL') {
+      return { nodeId, team_a: picks['SF-1'] || '', team_b: picks['SF-2'] || '', winner: picks['FINAL'] || '' };
+    }
+    return null;
+  }
+
+  const handleSelectWinner = (nodeId, winnerName) => {
+    if (lockedPicks) return;
+    if (!winnerName) return;
+    const nextPicks = { ...picks, [nodeId]: winnerName };
+    cleanDownstream(nextPicks);
+    setPicks(nextPicks);
+  }
+
+  const handleNodeClick = (node) => {
+    if (!node.team_a || !node.team_b) return;
+    setSelectedMatch(node);
+    fetchOdds(node.team_a, node.team_b);
+  }
+
+  const fetchOdds = async (t1, t2) => {
+    try {
+      setOddsLoading(true);
+      setMatchOdds(null);
+      const res = await fetch('/api/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team_a: t1, team_b: t2 })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMatchOdds(data);
+      }
+    } catch (err) {
+      console.error("Error fetching match odds:", err);
+    } finally {
+      setOddsLoading(false);
+    }
+  }
+
+  const handleSubmitPredictions = async () => {
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+    
+    const requiredKeys = [
+      'R16-1', 'R16-2', 'R16-3', 'R16-4', 'R16-5', 'R16-6', 'R16-7', 'R16-8',
+      'QF-1', 'QF-2', 'QF-3', 'QF-4',
+      'SF-1', 'SF-2',
+      'FINAL'
+    ];
+    const allPicksMade = requiredKeys.every(k => picks[k]);
+    if (!allPicksMade) {
+      alert("Please complete the entire bracket before submitting!");
+      return;
+    }
+    
+    try {
+      setIsSubmitting(true);
+      const res = await fetch('/api/predictions/lock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email, predictions: picks })
+      });
+      if (res.ok) {
+        setLockedPicks(picks);
+        alert("Predictions locked successfully! 🔒 You have entered the Leaderboard Arena.");
+      } else {
+        const errData = await res.json();
+        alert("Failed to lock predictions: " + (errData.detail || "Server error"));
+      }
+    } catch (err) {
+      console.error("Lock error:", err);
+      alert("Error connecting to server. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   const updatePaths = useCallback(() => {
     const container = containerRef.current
@@ -1543,36 +1735,52 @@ function SimulatorView({ simResults, simulating, triggerSimulationRun }) {
       return childMatch.team_a === winner || childMatch.team_b === winner
     }
 
+    const checkInteractiveActive = (fromNodeId, toNodeId) => {
+      const winner = picks[fromNodeId];
+      if (!winner) return false;
+      const targetMatch = getInteractiveMatch(toNodeId);
+      return targetMatch?.team_a === winner || targetMatch?.team_b === winner;
+    }
+
+    const isInteractive = simTab === 'locked';
+    const activeCheck = (fromNode, toNode, sampleParent, sampleChild) => {
+      if (isInteractive) {
+        return checkInteractiveActive(fromNode, toNode);
+      } else {
+        return checkActive(sampleParent, sampleChild);
+      }
+    };
+
     if (sample) {
       const connections = []
 
       // Left side connections
       // R16 to QF
-      connections.push({ from: 'match-R16-1', to: 'match-QF-1', side: 'left', active: checkActive(sample.r16_matches[0], sample.qf_matches[0]) })
-      connections.push({ from: 'match-R16-2', to: 'match-QF-1', side: 'left', active: checkActive(sample.r16_matches[1], sample.qf_matches[0]) })
-      connections.push({ from: 'match-R16-3', to: 'match-QF-2', side: 'left', active: checkActive(sample.r16_matches[2], sample.qf_matches[1]) })
-      connections.push({ from: 'match-R16-4', to: 'match-QF-2', side: 'left', active: checkActive(sample.r16_matches[3], sample.qf_matches[1]) })
+      connections.push({ from: 'match-R16-1', to: 'match-QF-1', side: 'left', active: activeCheck('R16-1', 'QF-1', sample.r16_matches[0], sample.qf_matches[0]) })
+      connections.push({ from: 'match-R16-2', to: 'match-QF-1', side: 'left', active: activeCheck('R16-2', 'QF-1', sample.r16_matches[1], sample.qf_matches[0]) })
+      connections.push({ from: 'match-R16-3', to: 'match-QF-2', side: 'left', active: activeCheck('R16-3', 'QF-2', sample.r16_matches[2], sample.qf_matches[1]) })
+      connections.push({ from: 'match-R16-4', to: 'match-QF-2', side: 'left', active: activeCheck('R16-4', 'QF-2', sample.r16_matches[3], sample.qf_matches[1]) })
 
       // QF to SF
-      connections.push({ from: 'match-QF-1', to: 'match-SF-1', side: 'left', active: checkActive(sample.qf_matches[0], sample.sf_matches[0]) })
-      connections.push({ from: 'match-QF-2', to: 'match-SF-1', side: 'left', active: checkActive(sample.qf_matches[1], sample.sf_matches[0]) })
+      connections.push({ from: 'match-QF-1', to: 'match-SF-1', side: 'left', active: activeCheck('QF-1', 'SF-1', sample.qf_matches[0], sample.sf_matches[0]) })
+      connections.push({ from: 'match-QF-2', to: 'match-SF-1', side: 'left', active: activeCheck('QF-2', 'SF-1', sample.qf_matches[1], sample.sf_matches[0]) })
 
       // SF to Final
-      connections.push({ from: 'match-SF-1', to: 'match-FINAL', side: 'left', active: checkActive(sample.sf_matches[0], sample.final_match) })
+      connections.push({ from: 'match-SF-1', to: 'match-FINAL', side: 'left', active: activeCheck('SF-1', 'FINAL', sample.sf_matches[0], sample.final_match) })
 
       // Right side connections
       // R16 to QF
-      connections.push({ from: 'match-R16-5', to: 'match-QF-3', side: 'right', active: checkActive(sample.r16_matches[4], sample.qf_matches[2]) })
-      connections.push({ from: 'match-R16-6', to: 'match-QF-3', side: 'right', active: checkActive(sample.r16_matches[5], sample.qf_matches[2]) })
-      connections.push({ from: 'match-R16-7', to: 'match-QF-4', side: 'right', active: checkActive(sample.r16_matches[6], sample.qf_matches[3]) })
-      connections.push({ from: 'match-R16-8', to: 'match-QF-4', side: 'right', active: checkActive(sample.r16_matches[7], sample.qf_matches[3]) })
+      connections.push({ from: 'match-R16-5', to: 'match-QF-3', side: 'right', active: activeCheck('R16-5', 'QF-3', sample.r16_matches[4], sample.qf_matches[2]) })
+      connections.push({ from: 'match-R16-6', to: 'match-QF-3', side: 'right', active: activeCheck('R16-6', 'QF-3', sample.r16_matches[5], sample.qf_matches[2]) })
+      connections.push({ from: 'match-R16-7', to: 'match-QF-4', side: 'right', active: activeCheck('R16-7', 'QF-4', sample.r16_matches[6], sample.qf_matches[3]) })
+      connections.push({ from: 'match-R16-8', to: 'match-QF-4', side: 'right', active: activeCheck('R16-8', 'QF-4', sample.r16_matches[7], sample.qf_matches[3]) })
 
       // QF to SF
-      connections.push({ from: 'match-QF-3', to: 'match-SF-2', side: 'right', active: checkActive(sample.qf_matches[2], sample.sf_matches[1]) })
-      connections.push({ from: 'match-QF-4', to: 'match-SF-2', side: 'right', active: checkActive(sample.qf_matches[3], sample.sf_matches[1]) })
+      connections.push({ from: 'match-QF-3', to: 'match-SF-2', side: 'right', active: activeCheck('QF-3', 'SF-2', sample.qf_matches[2], sample.sf_matches[1]) })
+      connections.push({ from: 'match-QF-4', to: 'match-SF-2', side: 'right', active: activeCheck('QF-4', 'SF-2', sample.qf_matches[3], sample.sf_matches[1]) })
 
       // SF to Final
-      connections.push({ from: 'match-SF-2', to: 'match-FINAL', side: 'right', active: checkActive(sample.sf_matches[1], sample.final_match) })
+      connections.push({ from: 'match-SF-2', to: 'match-FINAL', side: 'right', active: activeCheck('SF-2', 'FINAL', sample.sf_matches[1], sample.final_match) })
 
       connections.forEach(conn => {
          const pCoords = getPortCoords(conn.from, 'output', conn.side === 'right')
@@ -1585,7 +1793,7 @@ function SimulatorView({ simResults, simulating, triggerSimulationRun }) {
     }
     
     setPaths(newPaths)
-  }, [sample])
+  }, [sample, simTab, picks])
 
   useEffect(() => {
     if (!sample) return
@@ -1599,50 +1807,139 @@ function SimulatorView({ simResults, simulating, triggerSimulationRun }) {
       clearTimeout(timer)
       window.removeEventListener('resize', updatePaths)
     }
-  }, [sample, simulating, updatePaths])
+  }, [sample, simulating, updatePaths, simTab, picks])
+
+  // Count picks
+  const interactivePicksCount = Object.keys(picks).length;
+  const isBracketComplete = interactivePicksCount === 15;
 
   return (
     <div className="space-y-6">
       
-      {/* Header */}
-      <div className="glass-panel flex flex-col md:flex-row justify-between items-center gap-6 p-6 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-30" style={{
-          background: `radial-gradient(ellipse 50% 80% at 0% 100%, rgba(0, 232, 123, 0.06) 0%, transparent 60%)`
-        }} />
-        <div className="space-y-1.5 flex-1 relative z-10">
-          <h2 className="text-xl font-display tracking-wider text-white flex items-center gap-2">
-            <Trophy size={20} className="text-[#d4a54a]" />
-            MONTE CARLO SIMULATOR
-          </h2>
-          <p className="text-[12px] text-[#7b93a8] max-w-lg">
-            Run 500 complete tournament simulations incorporating current player stats and model weights.
-          </p>
-        </div>
-        <button 
-          onClick={triggerSimulationRun}
-          disabled={simulating}
-          className="relative z-10 bg-[#00e87b] hover:bg-[#00d46f] disabled:bg-[#00e87b]/30 disabled:text-[#050a0e]/50 text-[#050a0e] font-bold px-6 py-3 rounded-full text-[12px] shrink-0 transition-all flex items-center gap-2 hover:shadow-[0_0_20px_rgba(0,232,123,0.25)] cursor-pointer tracking-wide"
+      {/* Sub Tab Switcher */}
+      <div className="flex border-b border-white/[0.04] gap-6 mb-2">
+        <button
+          onClick={() => setSimTab('monte_carlo')}
+          className={`pb-3 text-sm font-semibold tracking-wide border-b-2 transition-all cursor-pointer ${
+            simTab === 'monte_carlo' 
+              ? 'border-[#00e87b] text-white text-green-glow' 
+              : 'border-transparent text-[#7b93a8] hover:text-white'
+          }`}
         >
-          {simulating ? (
-            <>
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#050a0e] border-t-transparent"></div>
-              Simulating...
-            </>
-          ) : (
-            <>
-              <Play size={12} fill="currentColor" />
-              Run 500 Simulations
-            </>
-          )}
+          Monte Carlo Projections
+        </button>
+        <button
+          onClick={() => setSimTab('locked')}
+          className={`pb-3 text-sm font-semibold tracking-wide border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+            simTab === 'locked' 
+              ? 'border-[#00e87b] text-white text-green-glow' 
+              : 'border-transparent text-[#7b93a8] hover:text-white'
+          }`}
+        >
+          <Lock size={13} className={lockedPicks ? 'text-[#00e87b]' : ''} />
+          Locked Predictions {lockedPicks && '🔒'}
         </button>
       </div>
+
+      {/* Header */}
+      {simTab === 'monte_carlo' ? (
+        <div className="glass-panel flex flex-col md:flex-row justify-between items-center gap-6 p-6 relative overflow-hidden">
+          <div className="absolute inset-0 opacity-30" style={{
+            background: `radial-gradient(ellipse 50% 80% at 0% 100%, rgba(0, 232, 123, 0.06) 0%, transparent 60%)`
+          }} />
+          <div className="space-y-1.5 flex-1 relative z-10">
+            <h2 className="text-xl font-display tracking-wider text-white flex items-center gap-2">
+              <Trophy size={20} className="text-[#d4a54a]" />
+              MONTE CARLO SIMULATOR
+            </h2>
+            <p className="text-[12px] text-[#7b93a8] max-w-lg">
+              Run 500 complete tournament simulations incorporating current player stats and model weights.
+            </p>
+          </div>
+          <button 
+            onClick={triggerSimulationRun}
+            disabled={simulating}
+            className="relative z-10 bg-[#00e87b] hover:bg-[#00d46f] disabled:bg-[#00e87b]/30 disabled:text-[#050a0e]/50 text-[#050a0e] font-bold px-6 py-3 rounded-full text-[12px] shrink-0 transition-all flex items-center gap-2 hover:shadow-[0_0_20px_rgba(0,232,123,0.25)] cursor-pointer tracking-wide"
+          >
+            {simulating ? (
+              <>
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#050a0e] border-t-transparent"></div>
+                Simulating...
+              </>
+            ) : (
+              <>
+                <Play size={12} fill="currentColor" />
+                Run 500 Simulations
+              </>
+            )}
+          </button>
+        </div>
+      ) : (
+        <div className="glass-panel flex flex-col md:flex-row justify-between items-center gap-6 p-6 relative overflow-hidden">
+          <div className="absolute inset-0 opacity-30" style={{
+            background: `radial-gradient(ellipse 50% 80% at 0% 100%, rgba(212, 165, 74, 0.04) 0%, transparent 60%)`
+          }} />
+          <div className="space-y-1.5 flex-1 relative z-10">
+            <h2 className="text-xl font-display tracking-wider text-white flex items-center gap-2">
+              <Lock size={18} className="text-[#d4a54a]" />
+              LOCKED BRACKET PREDICTIONS
+            </h2>
+            <p className="text-[12px] text-[#7b93a8] max-w-lg">
+              Make your interactively calculated picks from the Round of 16 to the Final. Lock them to compete in the leaderboard.
+            </p>
+          </div>
+          
+          {lockedPicks ? (
+            <div className="relative z-10 px-5 py-2.5 rounded-full bg-[#00e87b]/10 border border-[#00e87b]/20 text-[#00e87b] text-xs font-bold flex items-center gap-2">
+              <span>PREDICTIONS LOCKED 🔒</span>
+            </div>
+          ) : (
+            <div className="relative z-10 flex flex-col md:flex-row items-center gap-4">
+              <div className="text-right">
+                <span className="text-[10px] text-[#7b93a8] block uppercase font-bold tracking-wider">Progress</span>
+                <span className="text-xs text-white block mt-0.5 font-semibold">{interactivePicksCount} / 15 Picks Made</span>
+              </div>
+              <button 
+                onClick={handleSubmitPredictions}
+                disabled={!isBracketComplete || isSubmitting}
+                className="bg-[#d4a54a] hover:bg-[#c39439] disabled:bg-white/[0.04] disabled:text-[#3f5669] text-black font-bold px-6 py-3 rounded-full text-[12px] shrink-0 transition-all flex items-center gap-2 hover:shadow-[0_0_20px_rgba(212,165,74,0.25)] cursor-pointer tracking-wide"
+              >
+                {isSubmitting ? 'Submitting...' : 'Lock & Submit Predictions'}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Locked prediction certificate card */}
+      {simTab === 'locked' && lockedPicks && (
+        <div className="glass-panel p-6 border-[#d4a54a]/30 bg-gradient-to-r from-[#d4a54a]/[0.02] to-[#00e87b]/[0.02] relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="absolute inset-0 bg-[#d4a54a]/[0.02] pointer-events-none" />
+          <div className="space-y-1.5 relative z-10">
+            <h4 className="text-xs font-bold uppercase tracking-widest text-[#d4a54a] flex items-center gap-1.5">
+              <Shield size={14} />
+              Verified Predictions Stamp
+            </h4>
+            <p className="text-[11px] text-[#7b93a8] max-w-lg leading-relaxed">
+              Your tournament predictions are officially submitted and locked. Your champion pick is {picks['FINAL']}. Points will be calculated dynamically based on real 2026 World Cup outcomes!
+            </p>
+          </div>
+          <div className="flex flex-col items-center border border-[#d4a54a]/20 bg-black/40 rounded-xl p-3.5 relative z-10 min-w-[200px]">
+            <span className="text-[9px] uppercase font-bold tracking-wider text-[#7b93a8]">Your Champion Pick</span>
+            <span className="text-base font-display text-white mt-1.5 flex items-center gap-2">
+              {getFlagImg(picks['FINAL'] || '')}
+              {picks['FINAL']}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Bracket */}
       {sample ? (
         <div className="space-y-4">
           <h3 className="font-display text-lg tracking-wider text-white flex items-center gap-2">
             <TrendingUp size={16} className="text-[#00e87b]" />
-            SIMULATED BRACKET PATHWAY
+            {simTab === 'monte_carlo' ? 'SIMULATED BRACKET PATHWAY' : 'INTERACTIVE PREDICTIONS PATHWAY'}
           </h3>
           
           <div className="overflow-x-auto pb-4 pt-2">
@@ -1674,9 +1971,21 @@ function SimulatorView({ simResults, simulating, triggerSimulationRun }) {
                   <span className="text-[9px] text-[#7b93a8] block mt-0.5">Jun 28 – Jul 1</span>
                 </div>
                 <div className="flex-1 flex flex-col justify-around py-2">
-                  {sample.r16_matches.slice(0, 4).map((m, idx) => (
-                    <BracketMatchNode key={idx} match={m} domId={`match-R16-${idx + 1}`} />
-                  ))}
+                  {simTab === 'monte_carlo' ? (
+                    sample.r16_matches.slice(0, 4).map((m, idx) => (
+                      <BracketMatchNode key={idx} match={m} domId={`match-R16-${idx + 1}`} />
+                    ))
+                  ) : (
+                    ['R16-1', 'R16-2', 'R16-3', 'R16-4'].map((nodeId) => (
+                      <InteractiveBracketMatchNode 
+                        key={nodeId} 
+                        node={getInteractiveMatch(nodeId)} 
+                        onSelect={handleSelectWinner} 
+                        onClick={handleNodeClick} 
+                        isLocked={!!lockedPicks} 
+                      />
+                    ))
+                  )}
                 </div>
               </div>
 
@@ -1687,9 +1996,21 @@ function SimulatorView({ simResults, simulating, triggerSimulationRun }) {
                   <span className="text-[9px] text-[#7b93a8] block mt-0.5">Jul 4 – Jul 5</span>
                 </div>
                 <div className="flex-1 flex flex-col justify-around py-6">
-                  {sample.qf_matches.slice(0, 2).map((m, idx) => (
-                    <BracketMatchNode key={idx} match={m} domId={`match-QF-${idx + 1}`} />
-                  ))}
+                  {simTab === 'monte_carlo' ? (
+                    sample.qf_matches.slice(0, 2).map((m, idx) => (
+                      <BracketMatchNode key={idx} match={m} domId={`match-QF-${idx + 1}`} />
+                    ))
+                  ) : (
+                    ['QF-1', 'QF-2'].map((nodeId) => (
+                      <InteractiveBracketMatchNode 
+                        key={nodeId} 
+                        node={getInteractiveMatch(nodeId)} 
+                        onSelect={handleSelectWinner} 
+                        onClick={handleNodeClick} 
+                        isLocked={!!lockedPicks} 
+                      />
+                    ))
+                  )}
                 </div>
               </div>
 
@@ -1700,35 +2021,85 @@ function SimulatorView({ simResults, simulating, triggerSimulationRun }) {
                   <span className="text-[9px] text-[#7b93a8] block mt-0.5">Jul 8</span>
                 </div>
                 <div className="flex-1 flex flex-col justify-around py-14">
-                  {sample.sf_matches.slice(0, 1).map((m, idx) => (
-                    <BracketMatchNode key={idx} match={m} domId="match-SF-1" />
-                  ))}
+                  {simTab === 'monte_carlo' ? (
+                    sample.sf_matches.slice(0, 1).map((m, idx) => (
+                      <BracketMatchNode key={idx} match={m} domId="match-SF-1" />
+                    ))
+                  ) : (
+                    ['SF-1'].map((nodeId) => (
+                      <InteractiveBracketMatchNode 
+                        key={nodeId} 
+                        node={getInteractiveMatch(nodeId)} 
+                        onSelect={handleSelectWinner} 
+                        onClick={handleNodeClick} 
+                        isLocked={!!lockedPicks} 
+                      />
+                    ))
+                  )}
                 </div>
               </div>
 
               {/* Champion + Final */}
-              <div className="sim-bracket-column w-60 items-center justify-center space-y-8 self-center">
-                <div className="text-center space-y-2 relative pt-2">
-                  <div className="absolute h-36 w-36 bg-[#d4a54a]/10 rounded-full blur-3xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0"></div>
-                  <img 
-                    src="/world_cup_2026_trophy.png" 
-                    alt="Trophy" 
-                    className="h-20 w-20 object-contain mx-auto drop-shadow-[0_0_24px_rgba(212,165,74,0.5)] animate-float relative z-10" 
-                  />
-                  <div className="relative z-10">
-                    <span className="text-[10px] font-bold uppercase text-[#d4a54a] tracking-[0.25em] block text-gold-glow">CHAMPION</span>
-                    <span className="text-4xl font-display text-white tracking-wider uppercase block mt-1 leading-none">{sample.final_match.winner}</span>
+              {simTab === 'monte_carlo' ? (
+                <div className="sim-bracket-column w-60 items-center justify-center space-y-8 self-center">
+                  <div className="text-center space-y-2 relative pt-2">
+                    <div className="absolute h-36 w-36 bg-[#d4a54a]/10 rounded-full blur-3xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0"></div>
+                    <img 
+                      src="/world_cup_2026_trophy.png" 
+                      alt="Trophy" 
+                      className="h-20 w-20 object-contain mx-auto drop-shadow-[0_0_24px_rgba(212,165,74,0.5)] animate-float relative z-10" 
+                    />
+                    <div className="relative z-10">
+                      <span className="text-[10px] font-bold uppercase text-[#d4a54a] tracking-[0.25em] block text-gold-glow">CHAMPION</span>
+                      <span className="text-4xl font-display text-white tracking-wider uppercase block mt-1 leading-none">{sample.final_match.winner}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="w-full text-center space-y-2 relative z-10 pt-4 border-t border-white/[0.04]">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-[#3f5669] block">Final</span>
+                      <span className="text-[9px] text-[#7b93a8] block mt-0.5">Jul 12</span>
+                    </div>
+                    <BracketMatchNode match={sample.final_match} domId="match-FINAL" isFinal={true} />
                   </div>
                 </div>
-                
-                <div className="w-full text-center space-y-2 relative z-10 pt-4 border-t border-white/[0.04]">
-                  <div>
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-[#3f5669] block">Final</span>
-                    <span className="text-[9px] text-[#7b93a8] block mt-0.5">Jul 12</span>
+              ) : (
+                <div className="sim-bracket-column w-60 items-center justify-center space-y-8 self-center">
+                  <div className="text-center space-y-2 relative pt-2">
+                    <div className="absolute h-36 w-36 bg-[#d4a54a]/10 rounded-full blur-3xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0"></div>
+                    <img 
+                      src="/world_cup_2026_trophy.png" 
+                      alt="Trophy" 
+                      className="h-20 w-20 object-contain mx-auto drop-shadow-[0_0_24px_rgba(212,165,74,0.5)] animate-float relative z-10" 
+                    />
+                    <div className="relative z-10">
+                      <span className="text-[10px] font-bold uppercase text-[#d4a54a] tracking-[0.25em] block text-gold-glow">PREDICTED CHAMPION</span>
+                      <span className="text-4xl font-display text-white tracking-wider uppercase block mt-1 leading-none">
+                        {picks['FINAL'] ? (
+                          <span className="flex items-center justify-center gap-1.5 text-2xl lg:text-3xl text-[#d4a54a]">
+                            {getFlagImg(picks['FINAL'])}
+                            {picks['FINAL']}
+                          </span>
+                        ) : 'Awaiting Final'}
+                      </span>
+                    </div>
                   </div>
-                  <BracketMatchNode match={sample.final_match} domId="match-FINAL" isFinal={true} />
+                  
+                  <div className="w-full text-center space-y-2 relative z-10 pt-4 border-t border-white/[0.04]">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-[#3f5669] block">Final</span>
+                      <span className="text-[9px] text-[#7b93a8] block mt-0.5">Jul 12</span>
+                    </div>
+                    <InteractiveBracketMatchNode 
+                      node={getInteractiveMatch('FINAL')} 
+                      onSelect={handleSelectWinner} 
+                      onClick={handleNodeClick} 
+                      isFinal={true} 
+                      isLocked={!!lockedPicks} 
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* SF Right */}
               <div className="sim-bracket-column w-44">
@@ -1737,9 +2108,21 @@ function SimulatorView({ simResults, simulating, triggerSimulationRun }) {
                   <span className="text-[9px] text-[#7b93a8] block mt-0.5">Jul 8</span>
                 </div>
                 <div className="flex-1 flex flex-col justify-around py-14">
-                  {sample.sf_matches.slice(1, 2).map((m, idx) => (
-                    <BracketMatchNode key={idx} match={m} domId="match-SF-2" />
-                  ))}
+                  {simTab === 'monte_carlo' ? (
+                    sample.sf_matches.slice(1, 2).map((m, idx) => (
+                      <BracketMatchNode key={idx} match={m} domId="match-SF-2" />
+                    ))
+                  ) : (
+                    ['SF-2'].map((nodeId) => (
+                      <InteractiveBracketMatchNode 
+                        key={nodeId} 
+                        node={getInteractiveMatch(nodeId)} 
+                        onSelect={handleSelectWinner} 
+                        onClick={handleNodeClick} 
+                        isLocked={!!lockedPicks} 
+                      />
+                    ))
+                  )}
                 </div>
               </div>
 
@@ -1750,9 +2133,21 @@ function SimulatorView({ simResults, simulating, triggerSimulationRun }) {
                   <span className="text-[9px] text-[#7b93a8] block mt-0.5">Jul 4 – Jul 5</span>
                 </div>
                 <div className="flex-1 flex flex-col justify-around py-6">
-                  {sample.qf_matches.slice(2, 4).map((m, idx) => (
-                    <BracketMatchNode key={idx} match={m} domId={`match-QF-${idx + 3}`} />
-                  ))}
+                  {simTab === 'monte_carlo' ? (
+                    sample.qf_matches.slice(2, 4).map((m, idx) => (
+                      <BracketMatchNode key={idx} match={m} domId={`match-QF-${idx + 3}`} />
+                    ))
+                  ) : (
+                    ['QF-3', 'QF-4'].map((nodeId) => (
+                      <InteractiveBracketMatchNode 
+                        key={nodeId} 
+                        node={getInteractiveMatch(nodeId)} 
+                        onSelect={handleSelectWinner} 
+                        onClick={handleNodeClick} 
+                        isLocked={!!lockedPicks} 
+                      />
+                    ))
+                  )}
                 </div>
               </div>
 
@@ -1763,9 +2158,21 @@ function SimulatorView({ simResults, simulating, triggerSimulationRun }) {
                   <span className="text-[9px] text-[#7b93a8] block mt-0.5">Jun 28 – Jul 1</span>
                 </div>
                 <div className="flex-1 flex flex-col justify-around py-2">
-                  {sample.r16_matches.slice(4, 8).map((m, idx) => (
-                    <BracketMatchNode key={idx} match={m} domId={`match-R16-${idx + 5}`} />
-                  ))}
+                  {simTab === 'monte_carlo' ? (
+                    sample.r16_matches.slice(4, 8).map((m, idx) => (
+                      <BracketMatchNode key={idx} match={m} domId={`match-R16-${idx + 5}`} />
+                    ))
+                  ) : (
+                    ['R16-5', 'R16-6', 'R16-7', 'R16-8'].map((nodeId) => (
+                      <InteractiveBracketMatchNode 
+                        key={nodeId} 
+                        node={getInteractiveMatch(nodeId)} 
+                        onSelect={handleSelectWinner} 
+                        onClick={handleNodeClick} 
+                        isLocked={!!lockedPicks} 
+                      />
+                    ))
+                  )}
                 </div>
               </div>
 
@@ -1829,6 +2236,245 @@ function SimulatorView({ simResults, simulating, triggerSimulationRun }) {
       ) : (
         <div className="flex h-64 items-center justify-center text-[#3f5669] text-sm">Click simulate to generate a bracket pathway.</div>
       )}
+
+      {/* XGBoost Odds Modal Overlay */}
+      {selectedMatch && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+          <div className="w-full max-w-md bg-[#070d13] border border-white/[0.08] rounded-2xl shadow-[0_12px_48px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col max-h-[90vh]">
+            
+            {/* Modal Header */}
+            <div className="p-4 border-b border-white/[0.06] flex justify-between items-center bg-[#0a1118]">
+              <div className="flex items-center gap-2">
+                <Cpu size={16} className="text-[#00e87b]" />
+                <span className="text-[10px] uppercase font-bold tracking-wider text-white">XGBoost Matchup Oracle</span>
+              </div>
+              <button 
+                onClick={() => { setSelectedMatch(null); setMatchOdds(null); }}
+                className="text-[#7b93a8] hover:text-white text-xs font-semibold p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-6 flex-1">
+              
+              {/* Teams Display */}
+              <div className="flex justify-between items-center gap-4 border-b border-white/[0.03] pb-4">
+                <div className="flex flex-col items-center flex-1 text-center">
+                  <div className="h-12 w-12 rounded-full overflow-hidden flex items-center justify-center bg-white/[0.02] border border-white/[0.05] shadow-inner mb-2">
+                    {getFlagImg(selectedMatch.team_a, "w-10 h-7 object-cover rounded shadow-md")}
+                  </div>
+                  <span className="text-xs font-semibold text-white truncate max-w-[120px]">{selectedMatch.team_a}</span>
+                  <span className="text-[9px] text-[#3f5669] mt-0.5">FIFA Rank: {FIFA_RANKINGS[selectedMatch.team_a] || 'N/A'}</span>
+                </div>
+
+                <div className="text-center font-display text-[#3f5669] text-lg">VS</div>
+
+                <div className="flex flex-col items-center flex-1 text-center">
+                  <div className="h-12 w-12 rounded-full overflow-hidden flex items-center justify-center bg-white/[0.02] border border-white/[0.05] shadow-inner mb-2">
+                    {getFlagImg(selectedMatch.team_b, "w-10 h-7 object-cover rounded shadow-md")}
+                  </div>
+                  <span className="text-xs font-semibold text-white truncate max-w-[120px]">{selectedMatch.team_b}</span>
+                  <span className="text-[9px] text-[#3f5669] mt-0.5">FIFA Rank: {FIFA_RANKINGS[selectedMatch.team_b] || 'N/A'}</span>
+                </div>
+              </div>
+
+              {oddsLoading ? (
+                <div className="py-8 flex flex-col items-center gap-3">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#00e87b]/20 border-t-[#00e87b]"></div>
+                  <span className="text-[10px] text-[#7b93a8] tracking-widest uppercase">Calculating Odds...</span>
+                </div>
+              ) : matchOdds ? (
+                <div className="space-y-6">
+                  
+                  {/* Probability Chart */}
+                  <div className="space-y-2">
+                    <span className="text-[10px] uppercase font-bold text-[#7b93a8] tracking-wider block">Win Probabilities (90 Mins)</span>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="bg-white/[0.02] border border-white/[0.04] rounded-lg p-2.5 text-center">
+                        <span className="block text-[9px] text-[#7b93a8] uppercase font-semibold">Team A Win</span>
+                        <span className="block text-base font-display font-bold text-[#00e87b] mt-0.5">
+                          {Math.round(matchOdds.probabilities.team_a_win * 100)}%
+                        </span>
+                      </div>
+                      <div className="bg-white/[0.02] border border-white/[0.04] rounded-lg p-2.5 text-center">
+                        <span className="block text-[9px] text-[#7b93a8] uppercase font-semibold">Draw</span>
+                        <span className="block text-base font-display font-bold text-white mt-0.5">
+                          {Math.round(matchOdds.probabilities.draw * 100)}%
+                        </span>
+                      </div>
+                      <div className="bg-white/[0.02] border border-white/[0.04] rounded-lg p-2.5 text-center">
+                        <span className="block text-[9px] text-[#7b93a8] uppercase font-semibold">Team B Win</span>
+                        <span className="block text-base font-display font-bold text-[#d4a54a] mt-0.5">
+                          {Math.round(matchOdds.probabilities.team_b_win * 100)}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Advance Odds Bar */}
+                  <div className="space-y-2">
+                    <span className="text-[10px] uppercase font-bold text-[#7b93a8] tracking-wider block">Advance Projection (Including OT/Penalties)</span>
+                    {(() => {
+                      const pA = matchOdds.probabilities.team_a_win;
+                      const pB = matchOdds.probabilities.team_b_win;
+                      const pctA = Math.round((pA / (pA + pB)) * 100);
+                      const pctB = 100 - pctA;
+                      return (
+                        <div className="space-y-1">
+                          <div className="h-2.5 w-full bg-white/[0.04] rounded-full overflow-hidden flex">
+                            <div className="h-full bg-gradient-to-r from-[#00e87b] to-[#00c464]" style={{ width: `${pctA}%` }}></div>
+                            <div className="h-full bg-gradient-to-r from-[#e5b658] to-[#d4a54a]" style={{ width: `${pctB}%` }}></div>
+                          </div>
+                          <div className="flex justify-between items-center text-[10px] font-bold">
+                            <span className="text-[#00e87b]">{pctA}% {selectedMatch.team_a}</span>
+                            <span className="text-[#d4a54a]">{selectedMatch.team_b} {pctB}%</span>
+                          </div>
+                        </div>
+                      )
+                    })()}
+                  </div>
+
+                  {/* Model Explanation */}
+                  {matchOdds.explanations && matchOdds.explanations.length > 0 && (
+                    <div className="space-y-2">
+                      <span className="text-[10px] uppercase font-bold text-[#7b93a8] tracking-wider block">Key Match Factors</span>
+                      <ul className="space-y-2 bg-white/[0.02] border border-white/[0.04] p-3.5 rounded-xl text-[11px] text-[#7b93a8] leading-relaxed">
+                        {matchOdds.explanations.map((exp, idx) => (
+                          <li key={idx} className="flex gap-2 items-start">
+                            <span className="text-[#00e87b] font-bold mt-0.5">•</span>
+                            <span>{exp}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Features Comparison */}
+                  {matchOdds.features_a && matchOdds.features_b && (
+                    <div className="space-y-2">
+                      <span className="text-[10px] uppercase font-bold text-[#7b93a8] tracking-wider block">ML Stats Comparison</span>
+                      <div className="space-y-2.5 bg-white/[0.01] border border-white/[0.03] p-3.5 rounded-xl">
+                        {[
+                          { label: 'Attack Strength', key: 'team_attack_strength' },
+                          { label: 'Defense Solidity', key: 'team_defense_solidity' },
+                          { label: 'Midfield Creativity', key: 'team_midfield_creativity' },
+                          { label: 'Squad Depth', key: 'team_depth_score' },
+                          { label: 'Star Impact', key: 'team_star_player_impact' }
+                        ].map((stat) => {
+                          const valA = parseFloat(matchOdds.features_a[stat.key]) || 0;
+                          const valB = parseFloat(matchOdds.features_b[stat.key]) || 0;
+                          const maxVal = Math.max(valA, valB, 1.0);
+                          const widthA = Math.round((valA / maxVal) * 100);
+                          const widthB = Math.round((valB / maxVal) * 100);
+                          
+                          return (
+                            <div key={stat.key} className="space-y-1">
+                              <div className="flex justify-between items-center text-[9px] uppercase font-semibold text-[#7b93a8]">
+                                <span className="text-[#00e87b]">{valA.toFixed(1)}</span>
+                                <span>{stat.label}</span>
+                                <span className="text-[#d4a54a]">{valB.toFixed(1)}</span>
+                              </div>
+                              <div className="h-1.5 w-full bg-white/[0.02] rounded-full overflow-hidden flex relative">
+                                <div className="absolute top-0 bottom-0 left-[50%] right-[50%] bg-white/10 w-[1px]"></div>
+                                {/* Left Bar (Team A) */}
+                                <div className="h-full flex justify-end w-[50%] pr-[0.5px]">
+                                  <div className="h-full bg-[#00e87b] rounded-l" style={{ width: `${widthA * 0.5}%` }}></div>
+                                </div>
+                                {/* Right Bar (Team B) */}
+                                <div className="h-full flex justify-start w-[50%] pl-[0.5px]">
+                                  <div className="h-full bg-[#d4a54a] rounded-r" style={{ width: `${widthB * 0.5}%` }}></div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              ) : (
+                <div className="text-center text-xs text-[#3f5669] py-8">Failed to calculate prediction odds.</div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-white/[0.06] bg-[#0a1118] text-center">
+              <button
+                onClick={() => { setSelectedMatch(null); setMatchOdds(null); }}
+                className="bg-white/[0.04] border border-white/[0.05] hover:bg-white/[0.08] text-[#edf2f7] font-semibold text-xs px-4 py-2 rounded-lg cursor-pointer"
+              >
+                Close Insights
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function InteractiveBracketMatchNode({ node, onSelect, onClick, isFinal, isLocked }) {
+  if (!node) return null;
+  const { team_a, team_b, winner, nodeId } = node;
+  const isWinnerA = winner === team_a && team_a !== '';
+  const isWinnerB = winner === team_b && team_b !== '';
+
+  return (
+    <div 
+      id={`match-${nodeId}`}
+      className={`p-3 rounded-xl border text-[11px] font-medium transition-all duration-300 w-full flex flex-col justify-center gap-1.5 shadow-[0_4px_24px_rgba(0,0,0,0.5)] z-10 relative ${
+        isFinal 
+          ? 'border-[#d4a54a]/30 bg-[#070e15]/95 shadow-[0_4px_32px_rgba(212,165,74,0.15)]' 
+          : 'border-white/[0.06] bg-[#070e15]/90'
+      } ${team_a && team_b ? 'hover:border-[#00e87b]/30 cursor-pointer' : ''}`}
+      onClick={() => onClick?.(node)}
+    >
+      <div className="flex justify-between items-center text-[8px] text-[#3f5669] uppercase font-bold tracking-wider mb-0.5">
+        <span>Match {nodeId}</span>
+        {team_a && team_b && !isLocked && <span className="text-[#00e87b]/75">Click for odds</span>}
+      </div>
+
+      <div className="space-y-1.5">
+        {/* Team A */}
+        <div 
+          onClick={(e) => {
+            if (isLocked) return;
+            e.stopPropagation();
+            if (team_a) onSelect?.(nodeId, team_a);
+          }}
+          className={`flex justify-between items-center gap-2 p-1 rounded-md transition-colors ${
+            !isLocked && team_a ? 'hover:bg-white/[0.04] cursor-pointer' : ''
+          } ${isWinnerA ? 'bg-[#00e87b]/10 border border-[#00e87b]/20' : 'border border-transparent'}`}
+        >
+          <span className={`flex items-center gap-1.5 truncate ${isWinnerA ? "text-white font-bold" : "text-[#7b93a8] font-normal"}`}>
+            {team_a ? getFlagImg(team_a, "w-4.5 h-3 object-cover rounded-xs shadow-xs shrink-0") : '🏳️'}
+            <span className="truncate">{team_a || 'Awaiting Team'}</span>
+          </span>
+          {isWinnerA && <span className="text-[10px] text-[#00e87b] font-bold pr-1">✓</span>}
+        </div>
+
+        {/* Team B */}
+        <div 
+          onClick={(e) => {
+            if (isLocked) return;
+            e.stopPropagation();
+            if (team_b) onSelect?.(nodeId, team_b);
+          }}
+          className={`flex justify-between items-center gap-2 p-1 rounded-md transition-colors ${
+            !isLocked && team_b ? 'hover:bg-white/[0.04] cursor-pointer' : ''
+          } ${isWinnerB ? 'bg-[#00e87b]/10 border border-[#00e87b]/20' : 'border border-transparent'}`}
+        >
+          <span className={`flex items-center gap-1.5 truncate ${isWinnerB ? "text-white font-bold" : "text-[#7b93a8] font-normal"}`}>
+            {team_b ? getFlagImg(team_b, "w-4.5 h-3 object-cover rounded-xs shadow-xs shrink-0") : '🏳️'}
+            <span className="truncate">{team_b || 'Awaiting Team'}</span>
+          </span>
+          {isWinnerB && <span className="text-[10px] text-[#00e87b] font-bold pr-1">✓</span>}
+        </div>
+      </div>
     </div>
   )
 }
