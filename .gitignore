@@ -1,0 +1,30 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+*.pyo
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# Local configuration
+.env
+.env*.local
+
+# Node/Vite build files
+frontend/node_modules/
+frontend/dist/
+.eslintcache
+
+# Logs and databases
+*.log
+data/arena_leaderboard.json
+downloaded_files/
+
+# OS specific files
+.DS_Store
+Thumbs.db

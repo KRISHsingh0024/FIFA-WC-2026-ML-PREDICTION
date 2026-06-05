@@ -1,0 +1,2819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FIFA World Cup 2026 ML Predictor</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Leverage machine learning algorithms to forecast every matchup, track squad roster depth, and simulate the path to glory across North America.">
+  <meta name="keywords" content="FIFA World Cup 2026, Machine Learning Predictor, Soccer Analytics, Tournament Simulator, Soccer Predictions">
+  
+  <!-- Import Fonts from Google Fonts -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+  </style>
+
+  <style>
+    /* ─── DESIGN SYSTEM & CSS VARIABLES ──────────────────────────────────────── */
+    :root {
+      --bg-primary: #060d15;          /* near-black navy */
+      --bg-card: #0d1b2a;             /* dark card bg */
+      --bg-card-2: #0f2235;           /* slightly lighter card */
+      --accent-green: #00e87b;        /* electric green — primary accent */
+      --accent-green-glow: rgba(0, 232, 123, 0.25);
+      --accent-green-dim: #00c464;
+      --text-primary: #f0f6ff;
+      --text-secondary: #8fa8c0;
+      --text-muted: #4a6a85;
+      --border: rgba(0, 232, 123, 0.15);
+      --gold: #f4b942;
+      
+      --font-display: 'Bebas Neue', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+      
+      --sidebar-width: 240px;
+      --transition-speed: 0.3s;
+    }
+
+    /* ─── BASE STYLES ────────────────────────────────────────────────────────── */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-primary);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1a2f42;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-green-dim);
+    }
+
+    /* ─── TYPOGRAPHY ─── */
+    h1, h2, h3, h4, .bebas-font {
+      font-family: var(--font-display);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    p, span, label, select, button, input {
+      font-family: var(--font-body);
+    }
+
+    /* ─── CARD UTILITIES ─── */
+    .card {
+      background: linear-gradient(135deg, #0d1b2a 0%, #0a1520 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      transition: border-color var(--transition-speed), box-shadow var(--transition-speed), transform var(--transition-speed);
+    }
+
+    .card:hover {
+      border-color: rgba(0, 232, 123, 0.4);
+      box-shadow: 0 0 20px rgba(0, 232, 123, 0.1);
+    }
+
+    /* ─── BUTTONS ─── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 12px 28px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all var(--transition-speed) ease;
+      border: none;
+      outline: none;
+    }
+
+    .btn-primary {
+      background-color: var(--accent-green);
+      color: #000;
+      box-shadow: 0 4px 15px rgba(0, 232, 123, 0.2);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--accent-green-dim);
+      box-shadow: 0 0 25px var(--accent-green-glow);
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      border: 1.5px solid var(--accent-green);
+      color: var(--accent-green);
+    }
+
+    .btn-secondary:hover {
+      background-color: rgba(0, 232, 123, 0.08);
+      box-shadow: 0 0 15px rgba(0, 232, 123, 0.15);
+      transform: translateY(-2px);
+    }
+
+    /* ─── DIVIDERS ─── */
+    .section-divider {
+      height: 1px;
+      background-color: var(--accent-green);
+      opacity: 0.15;
+      margin: 40px 0;
+      width: 100%;
+    }
+
+    /* ─── LAYOUT: SIDEBAR ────────────────────────────────────────────────────── */
+    .sidebar {
+      width: var(--sidebar-width);
+      height: 100vh;
+      background-color: #080f18;
+      border-right: 1px solid #0e2035;
+      position: fixed;
+      left: 0;
+      top: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      z-index: 100;
+      transition: width var(--transition-speed);
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .sidebar-top {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo-container {
+      padding: 24px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #0e2035;
+    }
+
+    .logo-icon-img {
+      width: 28px;
+      height: auto;
+      filter: drop-shadow(0 0 8px rgba(244, 185, 66, 0.4));
+    }
+
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+      transition: opacity var(--transition-speed);
+    }
+
+    .logo-title {
+      font-size: 18px;
+      color: var(--text-primary);
+      line-height: 1;
+    }
+
+    .logo-subtitle {
+      font-size: 11px;
+      color: var(--accent-green);
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-top: 2px;
+    }
+
+    .nav-list {
+      list-style: none;
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .nav-item {
+      position: relative;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      padding: 14px 20px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      gap: 12px;
+      transition: color var(--transition-speed);
+      cursor: pointer;
+    }
+
+    .nav-link:hover {
+      color: #fff;
+    }
+
+    /* Nav Hover Accent Line */
+    .nav-link::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0;
+      background-color: var(--accent-green);
+      transition: width var(--transition-speed) ease;
+    }
+
+    .nav-link:hover::before {
+      width: 4px;
+    }
+
+    /* Nav Active State */
+    .nav-item.active .nav-link {
+      background: linear-gradient(90deg, rgba(0, 232, 123, 0.12), transparent);
+      color: #fff;
+    }
+
+    .nav-item.active .nav-link::before {
+      width: 4px;
+    }
+
+    .nav-text {
+      transition: opacity var(--transition-speed);
+    }
+
+    /* Injury Simulator in Sidebar bottom */
+    .sidebar-bottom {
+      padding: 20px;
+      border-top: 1px solid #0e2035;
+      background-color: #060d15;
+    }
+
+    .injury-simulator-header {
+      font-size: 10px;
+      color: var(--accent-green);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .injury-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* Custom Green Checkbox */
+    .injury-label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text-secondary);
+      user-select: none;
+      transition: color 0.2s ease;
+    }
+
+    .injury-label:hover {
+      color: var(--text-primary);
+    }
+
+    .injury-checkbox {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+      height: 0;
+      width: 0;
+    }
+
+    .checkmark {
+      height: 16px;
+      width: 16px;
+      background-color: #060d15;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      margin-right: 10px;
+      position: relative;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .injury-checkbox:checked ~ .checkmark {
+      background-color: var(--accent-green);
+      border-color: var(--accent-green);
+      box-shadow: 0 0 10px var(--accent-green-glow);
+    }
+
+    .checkmark::after {
+      content: "";
+      position: absolute;
+      display: none;
+      left: 5px;
+      top: 2px;
+      width: 4px;
+      height: 8px;
+      border: solid #000;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+
+    .injury-checkbox:checked ~ .checkmark::after {
+      display: block;
+    }
+
+    /* Recalculating overlay / text indicator */
+    .recalc-box {
+      margin-top: 12px;
+      padding: 8px;
+      background-color: rgba(0, 232, 123, 0.05);
+      border: 1px dashed var(--border);
+      border-radius: 6px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .recalc-box.active {
+      display: flex;
+      animation: pulse-recalc 1.5s infinite;
+    }
+
+    .recalc-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--accent-green);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent-green);
+    }
+
+    .recalc-text {
+      font-size: 11px;
+      color: var(--accent-green);
+      font-weight: 600;
+    }
+
+    @keyframes pulse-recalc {
+      0% { opacity: 0.5; }
+      50% { opacity: 1; }
+      100% { opacity: 0.5; }
+    }
+
+    /* ─── LAYOUT: MAIN CONTENT ───────────────────────────────────────────────── */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      width: calc(100% - var(--sidebar-width));
+      min-height: 100vh;
+      padding: 40px 48px;
+      display: flex;
+      flex-direction: column;
+      transition: margin-left var(--transition-speed), width var(--transition-speed);
+    }
+
+    /* Page load fade in animations */
+    .section-wrapper {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.8s forwards;
+    }
+
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .section-wrapper:nth-child(1) { animation-delay: 0.1s; }
+    .section-wrapper:nth-child(3) { animation-delay: 0.25s; }
+    .section-wrapper:nth-child(5) { animation-delay: 0.4s; }
+    .section-wrapper:nth-child(7) { animation-delay: 0.55s; }
+    .section-wrapper:nth-child(9) { animation-delay: 0.7s; }
+
+    /* ─── SECTION 1: HERO BANNER ────────────────────────────────────────────── */
+    .hero-card {
+      background: radial-gradient(circle at bottom center, rgba(0, 232, 123, 0.12) 0%, rgba(13, 27, 42, 0) 70%), 
+                  linear-gradient(135deg, #0d1b2a 0%, #0a1520 100%);
+      min-height: 320px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      border: 1px solid var(--border);
+    }
+
+    .hero-body {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      padding-bottom: 24px;
+    }
+
+    .hero-left {
+      width: 60%;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .hero-tag {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-green);
+      background: rgba(0, 232, 123, 0.08);
+      border: 1px solid rgba(0, 232, 123, 0.3);
+      padding: 4px 14px;
+      border-radius: 999px;
+      letter-spacing: 2px;
+    }
+
+    .hero-title {
+      font-size: 72px;
+      color: #fff;
+      line-height: 0.9;
+      letter-spacing: 2px;
+    }
+
+    .hero-title span {
+      color: var(--accent-green);
+      text-shadow: 0 0 30px rgba(0, 232, 123, 0.2);
+    }
+
+    .hero-subtext {
+      color: var(--text-secondary);
+      font-size: 15px;
+      line-height: 1.6;
+      max-width: 520px;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      margin-top: 12px;
+    }
+
+    .hero-right {
+      width: 40%;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      position: relative;
+    }
+
+    .hero-trophy {
+      width: 180px;
+      height: auto;
+      filter: drop-shadow(0 0 40px rgba(244, 185, 66, 0.45));
+      transform: rotate(-5deg);
+      animation: floatTrophy 4s ease-in-out infinite;
+      user-select: none;
+    }
+
+    @keyframes floatTrophy {
+      0%, 100% { transform: translateY(0) rotate(-5deg); }
+      50% { transform: translateY(-10px) rotate(-3deg); }
+    }
+
+    /* Stats Row (Bottom of Hero) */
+    .hero-stats-row {
+      border-top: 1px solid rgba(0, 232, 123, 0.2);
+      padding-top: 20px;
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      width: 100%;
+    }
+
+    .hero-stat-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .hero-stat-col:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 15%;
+      height: 70%;
+      width: 1px;
+      background-color: #0e2035;
+    }
+
+    .hero-stat-num {
+      font-size: 32px;
+      color: var(--accent-green);
+      line-height: 1;
+      font-weight: 700;
+    }
+
+    .hero-stat-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      letter-spacing: 1px;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ─── SECTION 2: WIN PROBABILITY TOP 5 & MODEL STATS ───────────────────── */
+    .two-col-grid {
+      display: grid;
+      grid-template-columns: 60% 40%;
+      gap: 20px;
+      width: 100%;
+    }
+
+    .top-five-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-size: 20px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .projections-link {
+      color: var(--accent-green);
+      font-size: 13px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+
+    .projections-link:hover {
+      color: var(--accent-green-dim);
+    }
+
+    .win-prob-list {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .win-prob-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .win-prob-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .win-prob-team {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .win-prob-team span:first-child {
+      font-size: 18px;
+    }
+
+    .win-prob-pct {
+      color: var(--accent-green);
+      font-weight: 700;
+    }
+
+    .progress-track {
+      height: 6px;
+      background-color: #1a2f42;
+      border-radius: 999px;
+      overflow: hidden;
+      width: 100%;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00e87b 0%, #00c464 100%);
+      border-radius: 999px;
+      width: 0%; /* animated via JS */
+      box-shadow: 0 0 10px rgba(0, 232, 123, 0.4);
+      transition: width 1.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    /* Shimmer effect triggers on injury simulator change */
+    .shimmer-active .progress-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+      animation: progress-shimmer 1.2s infinite;
+    }
+
+    @keyframes progress-shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    /* Model stats side card */
+    .model-stats-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .stats-card-header {
+      font-size: 12px;
+      letter-spacing: 2px;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+
+    .stats-2x2-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stat-box {
+      background-color: #060d15;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .stat-box-num {
+      font-size: 40px;
+      color: var(--accent-green);
+      line-height: 1;
+      font-weight: 700;
+    }
+
+    .stat-box-label {
+      font-size: 10px;
+      color: var(--text-secondary);
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+
+    .info-badge-box {
+      background-color: rgba(0, 232, 123, 0.03);
+      border: 1px solid rgba(0, 232, 123, 0.15);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .info-badge-icon {
+      font-size: 16px;
+      color: var(--accent-green);
+      line-height: 1;
+    }
+
+    .info-badge-text {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* ─── SECTION 3: MATCH PREDICTOR & FORECAST ────────────────────────────── */
+    .match-pred-grid {
+      display: grid;
+      grid-template-columns: 55% 45%;
+      gap: 20px;
+      width: 100%;
+    }
+
+    .selector-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .team-select-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .team-select-wrapper label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .team-select {
+      background-color: #060d15;
+      border: 1px solid #0e2035;
+      border-radius: 10px;
+      padding: 14px 16px;
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 500;
+      width: 100%;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238fa8c0' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .team-select:focus {
+      border-color: var(--accent-green);
+      box-shadow: 0 0 10px rgba(0, 232, 123, 0.15);
+    }
+
+    .vs-badge {
+      font-size: 16px;
+      color: var(--accent-green);
+      background-color: #060d15;
+      border: 1px solid var(--border);
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 20px;
+      font-weight: 800;
+      box-shadow: 0 0 15px rgba(0, 232, 123, 0.1);
+      flex-shrink: 0;
+    }
+
+    /* Result Panel */
+    .predict-result-panel {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      display: none; /* revealed via JS */
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .predict-result-panel.active {
+      display: flex;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    .prob-pills-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .prob-pill {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .prob-pill-win {
+      background-color: rgba(0, 232, 123, 0.1);
+      border: 1px solid rgba(0, 232, 123, 0.3);
+      color: var(--accent-green);
+    }
+
+    .prob-pill-draw {
+      background-color: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
+    }
+
+    .prob-pill-loss {
+      background-color: rgba(244, 185, 66, 0.1);
+      border: 1px solid rgba(244, 185, 66, 0.3);
+      color: var(--gold);
+    }
+
+    /* SVG Radial Gauge */
+    .gauge-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 10px 0;
+      position: relative;
+    }
+
+    .gauge-svg {
+      width: 240px;
+      height: 120px;
+    }
+
+    .gauge-track {
+      fill: none;
+      stroke: #1a2f42;
+      stroke-width: 14;
+      stroke-linecap: round;
+    }
+
+    .gauge-fill {
+      fill: none;
+      stroke: var(--accent-green);
+      stroke-width: 14;
+      stroke-linecap: round;
+      stroke-dasharray: 283; /* length of half circle path */
+      stroke-dashoffset: 283; /* 283 = 0% filled, 0 = 100% filled */
+      transition: stroke-dashoffset 1.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    .gauge-label {
+      position: absolute;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .gauge-percent {
+      font-size: 32px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+    }
+
+    .gauge-status {
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-top: 4px;
+      letter-spacing: 1px;
+    }
+
+    /* Key Factors Strength Bars */
+    .key-factors-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .factor-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .factor-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .factor-label {
+      font-weight: 500;
+    }
+
+    .factor-value {
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .factor-track {
+      height: 6px;
+      background-color: #1a2f42;
+      border-radius: 999px;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .factor-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00e87b 0%, #00c464 100%);
+      width: 0%; /* animated via JS */
+      border-radius: 999px;
+      transition: width 1.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    /* Forecast list */
+    .forecast-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .forecast-card {
+      background-color: #060d15;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+    }
+
+    .forecast-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .forecast-group {
+      color: var(--text-secondary);
+    }
+
+    .forecast-date {
+      color: var(--text-muted);
+    }
+
+    .forecast-matchup {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .forecast-matchup span {
+      font-size: 18px;
+    }
+
+    .forecast-winner-badge {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      font-size: 9px;
+      font-weight: 700;
+      background-color: rgba(0, 232, 123, 0.1);
+      border: 1px solid rgba(0, 232, 123, 0.3);
+      color: var(--accent-green);
+      padding: 2px 8px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Forecast bar divided in segments */
+    .forecast-prob-container {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .forecast-prob-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .forecast-split-bar {
+      display: flex;
+      height: 6px;
+      border-radius: 999px;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .split-win { background-color: var(--accent-green); }
+    .split-draw { background-color: var(--text-muted); }
+    .split-loss { background-color: #f4b942; }
+
+    /* ─── SECTION 4: ROAD TO GLORY TOURNAMENT BRACKET ──────────────────────── */
+    .bracket-section {
+      background: linear-gradient(135deg, #0d1b2a 0%, #080f18 100%);
+    }
+
+    .bracket-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      width: 100%;
+    }
+
+    /* Toggle Switches for Group / Knockout */
+    .bracket-toggles {
+      display: flex;
+      background-color: #060d15;
+      border: 1px solid #0e2035;
+      padding: 4px;
+      border-radius: 8px;
+    }
+
+    .bracket-toggle-btn {
+      padding: 6px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      color: var(--text-secondary);
+      background-color: transparent;
+      transition: all var(--transition-speed);
+    }
+
+    .bracket-toggle-btn.active {
+      background-color: var(--accent-green);
+      color: #000;
+    }
+
+    /* Bracket Container and Grid */
+    .bracket-scroll-container {
+      width: 100%;
+      overflow-x: auto;
+      padding-bottom: 20px;
+    }
+
+    .bracket-wrapper {
+      display: grid;
+      grid-template-columns: repeat(5, 180px);
+      justify-content: space-between;
+      gap: 20px;
+      min-width: 980px;
+      position: relative;
+    }
+
+    .bracket-column {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      height: 480px;
+      position: relative;
+    }
+
+    .column-header {
+      font-size: 13px;
+      color: var(--text-secondary);
+      text-align: center;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #0e2035;
+      padding-bottom: 8px;
+    }
+
+    /* Match Container */
+    .bracket-match {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: relative;
+    }
+
+    .bracket-team-slot {
+      height: 42px;
+      background-color: #060d15;
+      border: 1px solid #0e2035;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 500;
+      transition: border-color var(--transition-speed);
+    }
+
+    .bracket-team-name {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 120px;
+    }
+
+    .bracket-team-seed {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    /* Winner Glow State */
+    .bracket-team-slot.winner {
+      border-color: var(--accent-green);
+      background-color: rgba(0, 232, 123, 0.04);
+      color: #fff;
+      box-shadow: 0 0 10px rgba(0, 232, 123, 0.1);
+    }
+
+    .bracket-team-slot.winner .bracket-team-seed {
+      color: var(--accent-green);
+    }
+
+    /* Connector lines using pseudo-elements */
+    .bracket-column:not(:last-child) .bracket-match::after {
+      content: '';
+      position: absolute;
+      border-color: #0e2035;
+      border-style: solid;
+      border-width: 0;
+      z-index: 1;
+    }
+
+    /* Column specific connector layouts */
+    .r16-col .bracket-match::after {
+      right: -20px;
+      width: 20px;
+      height: 50%;
+      top: 25%;
+      border-right-width: 1.5px;
+    }
+
+    .r16-col .bracket-match:nth-child(odd)::after {
+      border-top-width: 1.5px;
+      height: 60px;
+      top: 40px;
+    }
+
+    .r16-col .bracket-match:nth-child(even)::after {
+      border-bottom-width: 1.5px;
+      height: 60px;
+      top: -18px;
+    }
+
+    .qf-col .bracket-match::after {
+      right: -20px;
+      width: 20px;
+      z-index: 1;
+    }
+
+    .qf-col .bracket-match:nth-child(1)::after, 
+    .qf-col .bracket-match:nth-child(3)::after {
+      border-top-width: 1.5px;
+      border-right-width: 1.5px;
+      height: 120px;
+      top: 40px;
+    }
+
+    .qf-col .bracket-match:nth-child(2)::after,
+    .qf-col .bracket-match:nth-child(4)::after {
+      border-bottom-width: 1.5px;
+      border-right-width: 1.5px;
+      height: 120px;
+      top: -78px;
+    }
+
+    .sf-col .bracket-match::after {
+      right: -20px;
+      width: 20px;
+      z-index: 1;
+    }
+
+    .sf-col .bracket-match:nth-child(1)::after {
+      border-top-width: 1.5px;
+      border-right-width: 1.5px;
+      height: 236px;
+      top: 40px;
+    }
+
+    .sf-col .bracket-match:nth-child(2)::after {
+      border-bottom-width: 1.5px;
+      border-right-width: 1.5px;
+      height: 236px;
+      top: -194px;
+    }
+
+    .final-col .bracket-match::after {
+      right: -20px;
+      width: 20px;
+      border-top-width: 1.5px;
+      height: 1.5px;
+      top: 40px;
+    }
+
+    /* Champion slot */
+    .champion-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .champion-title {
+      font-size: 24px;
+      color: var(--gold);
+      text-shadow: 0 0 15px rgba(244, 185, 66, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .champion-trophy-pulse {
+      width: 90px;
+      height: auto;
+      filter: drop-shadow(0 0 25px rgba(244, 185, 66, 0.5));
+      animation: goldPulse 3s infinite ease-in-out;
+      margin-top: 10px;
+    }
+
+    @keyframes goldPulse {
+      0%, 100% { opacity: 0.6; filter: drop-shadow(0 0 15px rgba(244, 185, 66, 0.3)); }
+      50% { opacity: 1; filter: drop-shadow(0 0 35px rgba(244, 185, 66, 0.7)); }
+    }
+
+    /* Group Stage Display */
+    .group-stage-grid {
+      display: none;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      width: 100%;
+    }
+
+    .group-card {
+      background-color: #060d15;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .group-card-header {
+      font-size: 14px;
+      color: var(--accent-green);
+      font-weight: 700;
+      border-bottom: 1px solid #0e2035;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+
+    .group-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    .group-table th {
+      color: var(--text-muted);
+      text-align: left;
+      padding: 4px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .group-table td {
+      padding: 6px 4px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+      color: var(--text-secondary);
+    }
+
+    .group-table tr:nth-child(1) td, .group-table tr:nth-child(2) td {
+      color: #fff;
+    }
+
+    /* ─── SECTION 5: TOURNAMENT SETTINGS ────────────────────────────────────── */
+    .settings-wrapper {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+
+    .toggles-col {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1.2;
+      min-width: 280px;
+    }
+
+    /* Custom CSS Toggle Switch */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .switch-label {
+      cursor: pointer;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #1a2f42;
+      transition: .3s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background-color: #f0f6ff;
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    .switch input:checked + .slider {
+      background-color: var(--accent-green);
+      box-shadow: 0 0 10px var(--accent-green-glow);
+    }
+
+    .switch input:checked + .slider:before {
+      transform: translateX(22px);
+      background-color: #000;
+    }
+
+    /* Slider styling */
+    .slider-col {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1.5;
+      min-width: 280px;
+    }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .slider-header span:last-child {
+      color: var(--accent-green);
+      font-weight: 700;
+    }
+
+    .range-input {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: #1a2f42;
+      outline: none;
+    }
+
+    .range-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      cursor: pointer;
+      box-shadow: 0 0 10px var(--accent-green-glow);
+      transition: transform 0.1s ease;
+    }
+
+    .range-input::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .settings-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+      flex: 0.8;
+      min-width: 180px;
+    }
+
+    .recalc-overlay-text {
+      font-size: 13px;
+      color: var(--accent-green);
+      font-weight: 600;
+      opacity: 0;
+      transform: translateY(5px);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+
+    .recalc-overlay-text.show {
+      opacity: 1;
+      transform: translateY(0);
+      animation: pulse-recalc 1.5s infinite;
+    }
+
+    /* ─── RESPONSIVENESS: COLLAPSIBLE SIDEBAR ────────────────────────────────── */
+    @media (max-width: 1024px) {
+      body {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 70px;
+        padding: 20px 0;
+      }
+
+      .logo-container {
+        padding: 15px 0;
+        justify-content: center;
+      }
+
+      .logo-text, .nav-text, .sidebar-bottom {
+        display: none;
+      }
+
+      .nav-link {
+        justify-content: center;
+        padding: 14px 0;
+      }
+
+      .nav-link span {
+        font-size: 20px;
+      }
+
+      .main-content {
+        margin-left: 70px;
+        width: calc(100% - 70px);
+        padding: 30px 24px;
+      }
+
+      .two-col-grid, .match-pred-grid {
+        grid-template-columns: 100%;
+        gap: 30px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── SIDEBAR CONTAINER ─── -->
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <!-- Logo Header -->
+      <div class="logo-container">
+        <img src="world_cup_2026_trophy.png" alt="Trophy" class="logo-icon-img">
+        <div class="logo-text">
+          <h2 class="logo-title">FIFA WORLD CUP</h2>
+          <span class="logo-subtitle">2026 PREDICTOR</span>
+        </div>
+      </div>
+
+      <!-- Navigation Vertical Links -->
+      <nav>
+        <ul class="nav-list">
+          <li class="nav-item active" data-target="section-hero">
+            <a class="nav-link">
+              <span>📊</span>
+              <span class="nav-text">Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item" data-target="section-probability">
+            <a class="nav-link">
+              <span>📈</span>
+              <span class="nav-text">Analytics</span>
+            </a>
+          </li>
+          <li class="nav-item" data-target="section-predictor">
+            <a class="nav-link">
+              <span>🎯</span>
+              <span class="nav-text">Predictions</span>
+            </a>
+          </li>
+          <li class="nav-item" data-target="section-bracket">
+            <a class="nav-link">
+              <span>🏟</span>
+              <span class="nav-text">Tournament Simulator</span>
+            </a>
+          </li>
+          <li class="nav-item" data-target="section-settings">
+            <a class="nav-link">
+              <span>⚙️</span>
+              <span class="nav-text">Settings</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+    <!-- Bottom Injury Simulator -->
+    <div class="sidebar-bottom">
+      <div class="injury-simulator-header">
+        <span>🩹</span> Injury Simulator
+      </div>
+      <div class="injury-list">
+        <label class="injury-label">
+          <input type="checkbox" class="injury-checkbox" value="mbappe">
+          <span class="checkmark"></span>
+          K. Mbappé (FRA) 🇫🇷
+        </label>
+        <label class="injury-label">
+          <input type="checkbox" class="injury-checkbox" value="messi">
+          <span class="checkmark"></span>
+          L. Messi (ARG) 🇦🇷
+        </label>
+        <label class="injury-label">
+          <input type="checkbox" class="injury-checkbox" value="bellingham">
+          <span class="checkmark"></span>
+          J. Bellingham (ENG) 🏴
+        </label>
+        <label class="injury-label">
+          <input type="checkbox" class="injury-checkbox" value="vinicius">
+          <span class="checkmark"></span>
+          Vinícius Jr. (BRA) 🇧🇷
+        </label>
+        <label class="injury-label">
+          <input type="checkbox" class="injury-checkbox" value="yamal">
+          <span class="checkmark"></span>
+          L. Yamal (ESP) 🇪🇸
+        </label>
+        <label class="injury-label">
+          <input type="checkbox" class="injury-checkbox" value="ronaldo">
+          <span class="checkmark"></span>
+          C. Ronaldo (POR) 🇵🇹
+        </label>
+        <label class="injury-label">
+          <input type="checkbox" class="injury-checkbox" value="haaland">
+          <span class="checkmark"></span>
+          E. Haaland (NOR) 🇳🇴
+        </label>
+        <label class="injury-label">
+          <input type="checkbox" class="injury-checkbox" value="debruyne">
+          <span class="checkmark"></span>
+          K. De Bruyne (BEL) 🇧🇪
+        </label>
+      </div>
+
+      <!-- Live recalculation feedback box -->
+      <div class="recalc-box" id="recalcBox">
+        <div class="recalc-dot"></div>
+        <span class="recalc-text">Win probability recalculating...</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ─── MAIN CONTENT CONTAINER ─── -->
+  <main class="main-content">
+    
+    <!-- ─── SECTION 1: HERO BANNER ─── -->
+    <section class="section-wrapper" id="section-hero">
+      <div class="card hero-card">
+        <div class="hero-body">
+          <div class="hero-left">
+            <span class="hero-tag">PREDICT. ANALYZE. WIN.</span>
+            <h1 class="hero-title">FIFA WORLD CUP 2026<br><span>ML PREDICTOR</span></h1>
+            <p class="hero-subtext">
+              Leverage machine learning algorithms to forecast every matchup, track squad roster depth, and simulate the path to glory across North America.
+            </p>
+            <div class="hero-buttons">
+              <a href="#section-predictor" class="btn btn-primary">Explore Predictions →</a>
+              <a href="#section-bracket" class="btn btn-secondary">Tournament Simulator</a>
+            </div>
+          </div>
+          <div class="hero-right">
+            <img src="world_cup_2026_trophy.png" alt="FIFA World Cup 2026 Trophy" class="hero-trophy">
+          </div>
+        </div>
+        
+        <!-- Bottom stats row -->
+        <div class="hero-stats-row">
+          <div class="hero-stat-col">
+            <span class="hero-stat-num" id="stat-teams">0</span>
+            <span class="hero-stat-label">👥 48 Teams</span>
+          </div>
+          <div class="hero-stat-col">
+            <span class="hero-stat-num" id="stat-matches">0</span>
+            <span class="hero-stat-label">⚽ 104 Matches</span>
+          </div>
+          <div class="hero-stat-col">
+            <span class="hero-stat-num" id="stat-hosts">0</span>
+            <span class="hero-stat-label">🗺️ 3 Host Nations</span>
+          </div>
+          <div class="hero-stat-col">
+            <span class="hero-stat-num" id="stat-champions">0</span>
+            <span class="hero-stat-label">🏆 1 World Champion</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ─── SECTION 2: TOP 5 PROJECTIONS & MODEL STATS ─── -->
+    <section class="section-wrapper" id="section-probability">
+      <div class="two-col-grid">
+        <!-- Win Probability Top 5 -->
+        <div class="card" id="winProbCard">
+          <div class="top-five-header">
+            <h2 class="section-title">⚡ WIN PROBABILITY TOP 5</h2>
+            <a href="#section-bracket" class="projections-link">View All Projections →</a>
+          </div>
+          <div class="win-prob-list" id="topFiveList">
+            <!-- Dynamic entries on load -->
+            <div class="win-prob-row">
+              <div class="win-prob-info">
+                <span class="win-prob-team"><span>🇭🇷</span> Croatia</span>
+                <span class="win-prob-pct">16.8%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" data-pct="16.8"></div>
+              </div>
+            </div>
+            <div class="win-prob-row">
+              <div class="win-prob-info">
+                <span class="win-prob-team"><span>🇵🇹</span> Portugal</span>
+                <span class="win-prob-pct">11.6%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" data-pct="11.6"></div>
+              </div>
+            </div>
+            <div class="win-prob-row">
+              <div class="win-prob-info">
+                <span class="win-prob-team"><span>🇨🇭</span> Switzerland</span>
+                <span class="win-prob-pct">11.1%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" data-pct="11.1"></div>
+              </div>
+            </div>
+            <div class="win-prob-row">
+              <div class="win-prob-info">
+                <span class="win-prob-team"><span>🇧🇷</span> Brazil</span>
+                <span class="win-prob-pct">8.1%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" data-pct="8.1"></div>
+              </div>
+            </div>
+            <div class="win-prob-row">
+              <div class="win-prob-info">
+                <span class="win-prob-team"><span>🇲🇦</span> Morocco</span>
+                <span class="win-prob-pct">7.2%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" data-pct="7.2"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Model Coverage Stats -->
+        <div class="card model-stats-card">
+          <div>
+            <h3 class="stats-card-header">🛡️ MODEL COVERAGE STATS</h3>
+            <div class="stats-2x2-grid">
+              <div class="stat-box">
+                <span class="stat-box-num">48/48</span>
+                <span class="stat-box-label">Teams Analyzed</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-box-num">1,200+</span>
+                <span class="stat-box-label">Players Logged</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-box-num">100k+</span>
+                <span class="stat-box-label">Matches Sim.</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-box-num">87.4%</span>
+                <span class="stat-box-label">Model Accuracy</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-badge-box">
+            <span class="info-badge-icon">⚠️</span>
+            <span class="info-badge-text">
+              Updates dynamically based on roster updates, club forms, and active simulated injuries.
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ─── SECTION 3: MATCH PREDICTOR ─── -->
+    <section class="section-wrapper" id="section-predictor">
+      <div class="match-pred-grid">
+        <!-- Match Predictor Selectors -->
+        <div class="card">
+          <h2 class="section-title">🎯 MATCH PREDICTOR</h2>
+          
+          <div class="selector-container">
+            <div class="team-select-wrapper">
+              <label for="selectTeamA">Team A</label>
+              <select class="team-select" id="selectTeamA">
+                <!-- Ported in JS -->
+              </select>
+            </div>
+            
+            <div class="vs-badge">VS</div>
+            
+            <div class="team-select-wrapper">
+              <label for="selectTeamB">Team B</label>
+              <select class="team-select" id="selectTeamB">
+                <!-- Ported in JS -->
+              </select>
+            </div>
+          </div>
+          
+          <button class="btn btn-primary" style="width: 100%; margin-top: 24px;" id="predictBtn">Predict Match →</button>
+          
+          <!-- Predictions output panel -->
+          <div class="predict-result-panel" id="resultPanel">
+            <div class="prob-pills-row">
+              <div class="prob-pill prob-pill-win" id="winPill">TEAM A WIN: -%</div>
+              <div class="prob-pill prob-pill-draw" id="drawPill">DRAW: -%</div>
+              <div class="prob-pill prob-pill-loss" id="lossPill">TEAM B WIN: -%</div>
+            </div>
+            
+            <div class="gauge-wrapper">
+              <svg class="gauge-svg" viewBox="0 0 200 100">
+                <path class="gauge-track" d="M20 90 A 80 80 0 0 1 180 90"></path>
+                <path class="gauge-fill" id="gaugeFill" d="M20 90 A 80 80 0 0 1 180 90"></path>
+              </svg>
+              <div class="gauge-label">
+                <span class="gauge-percent" id="gaugePercent">-%</span>
+                <span class="gauge-status" id="gaugeStatus">PREDICTED WINNER</span>
+              </div>
+            </div>
+
+            <!-- Matchup Strengths -->
+            <div class="key-factors-container">
+              <div class="factor-row">
+                <div class="factor-header">
+                  <span class="factor-label">Team Form</span>
+                  <span class="factor-value" id="factorFormVal">-%</span>
+                </div>
+                <div class="factor-track">
+                  <div class="factor-fill" id="factorFormFill"></div>
+                </div>
+              </div>
+              <div class="factor-row">
+                <div class="factor-header">
+                  <span class="factor-label">Player Performance</span>
+                  <span class="factor-value" id="factorPlayerVal">-%</span>
+                </div>
+                <div class="factor-track">
+                  <div class="factor-fill" id="factorPlayerFill"></div>
+                </div>
+              </div>
+              <div class="factor-row">
+                <div class="factor-header">
+                  <span class="factor-label">Head to Head</span>
+                  <span class="factor-value" id="factorH2hVal">-%</span>
+                </div>
+                <div class="factor-track">
+                  <div class="factor-fill" id="factorH2hFill"></div>
+                </div>
+              </div>
+              <div class="factor-row">
+                <div class="factor-header">
+                  <span class="factor-label">Injuries Impact</span>
+                  <span class="factor-value" id="factorInjVal">-%</span>
+                </div>
+                <div class="factor-track">
+                  <div class="factor-fill" id="factorInjFill"></div>
+                </div>
+              </div>
+              <div class="factor-row">
+                <div class="factor-header">
+                  <span class="factor-label">Home Advantage</span>
+                  <span class="factor-value" id="factorHomeVal">-%</span>
+                </div>
+                <div class="factor-track">
+                  <div class="factor-fill" id="factorHomeFill"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Upcoming Match Predictions Forecast -->
+        <div class="card">
+          <h2 class="section-title" style="margin-bottom: 24px;">📊 KEY PREDICTIONS FORECAST</h2>
+          
+          <div class="forecast-list">
+            <!-- Forecast Card 1 -->
+            <div class="forecast-card">
+              <div class="forecast-winner-badge">Predicted Winner</div>
+              <div class="forecast-meta">
+                <span class="forecast-group">GROUP A</span>
+                <span class="forecast-date">JUNE 16</span>
+              </div>
+              <div class="forecast-matchup">
+                <span>🇲🇽</span> Mexico vs Poland <span>🇵🇱</span>
+              </div>
+              <div class="forecast-prob-container">
+                <div class="forecast-prob-labels">
+                  <span>WIN: 64%</span>
+                  <span>DRAW: 21%</span>
+                  <span>LOSS: 15%</span>
+                </div>
+                <div class="forecast-split-bar">
+                  <div class="split-win" style="width: 64%"></div>
+                  <div class="split-draw" style="width: 21%"></div>
+                  <div class="split-loss" style="width: 15%"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Forecast Card 2 -->
+            <div class="forecast-card">
+              <div class="forecast-winner-badge">Predicted Winner</div>
+              <div class="forecast-meta">
+                <span class="forecast-group">GROUP B</span>
+                <span class="forecast-date">JUNE 17</span>
+              </div>
+              <div class="forecast-matchup">
+                <span>🇺🇸</span> USA vs Germany <span>🇩🇪</span>
+              </div>
+              <div class="forecast-prob-container">
+                <div class="forecast-prob-labels">
+                  <span>WIN: 38%</span>
+                  <span>DRAW: 27%</span>
+                  <span>LOSS: 35%</span>
+                </div>
+                <div class="forecast-split-bar">
+                  <div class="split-win" style="width: 38%"></div>
+                  <div class="split-draw" style="width: 27%"></div>
+                  <div class="split-loss" style="width: 35%"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Forecast Card 3 -->
+            <div class="forecast-card">
+              <div class="forecast-winner-badge">Predicted Winner</div>
+              <div class="forecast-meta">
+                <span class="forecast-group">GROUP C</span>
+                <span class="forecast-date">JUNE 17</span>
+              </div>
+              <div class="forecast-matchup">
+                <span>🇧🇷</span> Brazil vs Colombia <span>🇨🇴</span>
+              </div>
+              <div class="forecast-prob-container">
+                <div class="forecast-prob-labels">
+                  <span>WIN: 71%</span>
+                  <span>DRAW: 18%</span>
+                  <span>LOSS: 11%</span>
+                </div>
+                <div class="forecast-split-bar">
+                  <div class="split-win" style="width: 71%"></div>
+                  <div class="split-draw" style="width: 18%"></div>
+                  <div class="split-loss" style="width: 11%"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Forecast Card 4 -->
+            <div class="forecast-card">
+              <div class="forecast-winner-badge">Predicted Winner</div>
+              <div class="forecast-meta">
+                <span class="forecast-group">GROUP D</span>
+                <span class="forecast-date">JUNE 18</span>
+              </div>
+              <div class="forecast-matchup">
+                <span>🇫🇷</span> France vs Australia <span>🇦🇺</span>
+              </div>
+              <div class="forecast-prob-container">
+                <div class="forecast-prob-labels">
+                  <span>WIN: 88%</span>
+                  <span>DRAW: 9%</span>
+                  <span>LOSS: 3%</span>
+                </div>
+                <div class="forecast-split-bar">
+                  <div class="split-win" style="width: 88%"></div>
+                  <div class="split-draw" style="width: 9%"></div>
+                  <div class="split-loss" style="width: 3%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ─── SECTION 4: TOURNAMENT BRACKET ─── -->
+    <section class="section-wrapper" id="section-bracket">
+      <div class="card bracket-section">
+        <div class="bracket-header">
+          <h2 class="section-title">🏆 ROAD TO GLORY — TOURNAMENT BRACKET</h2>
+          <div class="bracket-toggles">
+            <button class="bracket-toggle-btn" id="groupBtn">Group Stage</button>
+            <button class="bracket-toggle-btn active" id="knockoutBtn">Knockout</button>
+          </div>
+        </div>
+
+        <!-- Knockout Bracket View -->
+        <div class="bracket-scroll-container" id="bracketScrollArea">
+          <div class="bracket-wrapper" id="bracketLayout">
+            <!-- Round of 16 -->
+            <div class="bracket-column r16-col">
+              <h3 class="column-header">Round of 16</h3>
+              
+              <!-- Match 1 -->
+              <div class="bracket-match">
+                <div class="bracket-team-slot winner">
+                  <span class="bracket-team-name"><span>🇧🇷</span> Brazil</span>
+                  <span class="bracket-team-seed">#1</span>
+                </div>
+                <div class="bracket-team-slot">
+                  <span class="bracket-team-name"><span>🇲🇦</span> Morocco</span>
+                  <span class="bracket-team-seed">#16</span>
+                </div>
+              </div>
+
+              <!-- Match 2 -->
+              <div class="bracket-match">
+                <div class="bracket-team-slot winner">
+                  <span class="bracket-team-name"><span>🇫🇷</span> France</span>
+                  <span class="bracket-team-seed">#8</span>
+                </div>
+                <div class="bracket-team-slot">
+                  <span class="bracket-team-name"><span>🇸🇳</span> Senegal</span>
+                  <span class="bracket-team-seed">#9</span>
+                </div>
+              </div>
+
+              <!-- Match 3 -->
+              <div class="bracket-match">
+                <div class="bracket-team-slot winner">
+                  <span class="bracket-team-name"><span>🏴󠁧󠁢󠁥󠁮󠁧󠁿</span> England</span>
+                  <span class="bracket-team-seed">#5</span>
+                </div>
+                <div class="bracket-team-slot">
+                  <span class="bracket-team-name"><span>🇳🇱</span> Netherlands</span>
+                  <span class="bracket-team-seed">#12</span>
+                </div>
+              </div>
+
+              <!-- Match 4 -->
+              <div class="bracket-match">
+                <div class="bracket-team-slot winner">
+                  <span class="bracket-team-name"><span>🇵🇹</span> Portugal</span>
+                  <span class="bracket-team-seed">#4</span>
+                </div>
+                <div class="bracket-team-slot">
+                  <span class="bracket-team-name"><span>🇪🇸</span> Spain</span>
+                  <span class="bracket-team-seed">#13</span>
+                </div>
+              </div>
+
+              <!-- Match 5 -->
+              <div class="bracket-match">
+                <div class="bracket-team-slot winner">
+                  <span class="bracket-team-name"><span>🇩🇪</span> Germany</span>
+                  <span class="bracket-team-seed">#3</span>
+                </div>
+                <div class="bracket-team-slot">
+                  <span class="bracket-team-name"><span>🇦🇷</span> Argentina</span>
+                  <span class="bracket-team-seed">#14</span>
+                </div>
+              </div>
+
+              <!-- Match 6 -->
+              <div class="bracket-match">
+                <div class="bracket-team-slot winner">
+                  <span class="bracket-team-name"><span>🇭🇷</span> Croatia</span>
+                  <span class="bracket-team-seed">#6</span>
+                </div>
+                <div class="bracket-team-slot">
+                  <span class="bracket-team-name"><span>🇺🇾</span> Uruguay</span>
+                  <span class="bracket-team-seed">#11</span>
+                </div>
+              </div>
+
+              <!-- Match 7 -->
+              <div class="bracket-match">
+                <div class="bracket-team-slot winner">
+                  <span class="bracket-team-name"><span>🇺🇸</span> USA</span>
+                  <span class="bracket-team-seed">#7</span>
+                </div>
+                <div class="bracket-team-slot">
+                  <span class="bracket-team-name"><span>🇲🇽</span> Mexico</span>
+                  <span class="bracket-team-seed">#10</span>
+                </div>
+              </div>
+
+              <!-- Match 8 -->
+              <div class="bracket-match">
+                <div class="bracket-team-slot winner">
+                  <span class="bracket-team-name"><span>🇯🇵</span> Japan</span>
+                  <span class="bracket-team-seed">#2</span>
+                </div>
+                <div class="bracket-team-slot">
+                  <span class="bracket-team-name"><span>🇰🇷</span> S. Korea</span>
+                  <span class="bracket-team-seed">#15</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quarter Finals -->
+            <div class="bracket-column qf-col">
+              <h3 class="column-header">Quarter Finals</h3>
+              
+              <!-- QF Match 1 -->
+              <div class="bracket-match">
+                <div class="bracket-team-slot winner">
+                  <span class="bracket-team-name"><span>🇧🇷</span> Brazil</span>
+                  <span class="bracket-team-seed">#1</span>
+                </div>
+                <div class="bracket-team-slot">
+                  <span class="bracket-team-name"><span>🇫🇷</span> France</span>
+                  <span class="bracket-team-seed">#8</span>
+                </div>
+              </div>
+
+              <!-- QF Match 2 -->
+              <div class="bracket-match">
+                <div class="bracket-team-slot winner">
+                  <span class="bracket-team-name"><span>🏴󠁧󠁢󠁥󠁮󠁧󠁿</span> England</span>
+                  <span class="bracket-team-seed">#5</span>
+                </div>
+                <div class="bracket-team-slot">
+                  <span class="bracket-team-name"><span>🇵🇹</span> Portugal</span>
+                  <span class="bracket-team-seed">#4</span>
+                </div>
+              </div>
+
+              <!-- QF Match 3 -->
+              <div class="bracket-match">
+                <div class="bracket-team-slot winner">
+                  <span class="bracket-team-name"><span>🇩🇪</span> Germany</span>
+                  <span class="bracket-team-seed">#3</span>
+                </div>
+                <div class="bracket-team-slot">
+                  <span class="bracket-team-name"><span>🇭🇷</span> Croatia</span>
+                  <span class="bracket-team-seed">#6</span>
+                </div>
+              </div>
+
+              <!-- QF Match 4 -->
+              <div class="bracket-match">
+                <div class="bracket-team-slot winner">
+                  <span class="bracket-team-name"><span>🇺🇸</span> USA</span>
+                  <span class="bracket-team-seed">#7</span>
+                </div>
+                <div class="bracket-team-slot">
+                  <span class="bracket-team-name"><span>🇯🇵</span> Japan</span>
+                  <span class="bracket-team-seed">#2</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Semi Finals -->
+            <div class="bracket-column sf-col">
+              <h3 class="column-header">Semi Finals</h3>
+              
+              <!-- SF Match 1 -->
+              <div class="bracket-match">
+                <div class="bracket-team-slot winner">
+                  <span class="bracket-team-name"><span>🇧🇷</span> Brazil</span>
+                  <span class="bracket-team-seed">#1</span>
+                </div>
+                <div class="bracket-team-slot">
+                  <span class="bracket-team-name"><span>🏴󠁧󠁢󠁥󠁮󠁧󠁿</span> England</span>
+                  <span class="bracket-team-seed">#5</span>
+                </div>
+              </div>
+
+              <!-- SF Match 2 -->
+              <div class="bracket-match">
+                <div class="bracket-team-slot winner">
+                  <span class="bracket-team-name"><span>🇩🇪</span> Germany</span>
+                  <span class="bracket-team-seed">#3</span>
+                </div>
+                <div class="bracket-team-slot">
+                  <span class="bracket-team-name"><span>🇺🇸</span> USA</span>
+                  <span class="bracket-team-seed">#7</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Final -->
+            <div class="bracket-column final-col">
+              <h3 class="column-header">Final</h3>
+              
+              <!-- Final Match -->
+              <div class="bracket-match" style="margin-top: 15px;">
+                <div class="bracket-team-slot winner">
+                  <span class="bracket-team-name"><span>🇧🇷</span> Brazil</span>
+                  <span class="bracket-team-seed">#1</span>
+                </div>
+                <div class="bracket-team-slot">
+                  <span class="bracket-team-name"><span>🇩🇪</span> Germany</span>
+                  <span class="bracket-team-seed">#3</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Champion -->
+            <div class="bracket-column champion-col">
+              <h3 class="column-header">Champion</h3>
+              <div class="champion-box">
+                <h4 class="champion-title" id="champText">🇧🇷 BRAZIL ⭐</h4>
+                <img src="world_cup_2026_trophy.png" alt="World Cup 2026 Trophy" class="champion-trophy-pulse">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Group Stage Standings Grid (Hidden by default) -->
+        <div class="group-stage-grid" id="groupGrid">
+          <!-- Ported in JS dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ─── SECTION 5: TOURNAMENT SETTINGS ─── -->
+    <section class="section-wrapper" id="section-settings">
+      <div class="card">
+        <h2 class="section-title" style="margin-bottom: 24px;">⚙️ TOURNAMENT SETTINGS</h2>
+        
+        <div class="settings-wrapper">
+          <!-- Toggle Switches Column -->
+          <div class="toggles-col">
+            <div class="toggle-row">
+              <label for="hostAdvantageToggle" class="switch-label">Include Host Nation Advantage</label>
+              <label class="switch">
+                <input type="checkbox" id="hostAdvantageToggle" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            
+            <div class="toggle-row">
+              <label for="recentFormToggle" class="switch-label">Weight Recent Form (Last 10 Games)</label>
+              <label class="switch">
+                <input type="checkbox" id="recentFormToggle" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="toggle-row">
+              <label for="penaltiesToggle" class="switch-label">Include Penalty Shootout Probability</label>
+              <label class="switch">
+                <input type="checkbox" id="penaltiesToggle">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Slider Column -->
+          <div class="slider-col">
+            <div class="slider-header">
+              <span>Simulation Runs</span>
+              <span id="simCountLabel">100,000</span>
+            </div>
+            <input type="range" min="1000" max="250000" step="1000" value="100000" class="range-input" id="simRangeInput">
+          </div>
+
+          <!-- Actions Column -->
+          <div class="settings-actions">
+            <button class="btn btn-primary" id="rerunSimBtn">Re-run Simulation</button>
+            <span class="recalc-overlay-text" id="rerunOverlayText">🔄 Recalculating 100,000 simulations...</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ─── JAVASCRIPT CONTROLLER ─────────────────────────────────────────────── -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      
+      // ─── HARDCODED TEAM DATA (48 TEAMS) ───
+      const teamsData = {
+        "Argentina": { rating: 95, flag: "🇦🇷", conf: "CONMEBOL", group: "J", seed: 14 },
+        "France": { rating: 94, flag: "🇫🇷", conf: "UEFA", group: "I", seed: 8 },
+        "England": { rating: 93, flag: "🏴", conf: "UEFA", group: "L", seed: 5 },
+        "Brazil": { rating: 92, flag: "🇧🇷", conf: "CONMEBOL", group: "C", seed: 1 },
+        "Spain": { rating: 91, flag: "🇪🇸", conf: "UEFA", group: "H", seed: 13 },
+        "Portugal": { rating: 90, flag: "🇵🇹", conf: "UEFA", group: "K", seed: 4 },
+        "Germany": { rating: 89, flag: "🇩🇪", conf: "UEFA", group: "E", seed: 3 },
+        "Netherlands": { rating: 88, flag: "🇳🇱", conf: "UEFA", group: "F", seed: 12 },
+        "Belgium": { rating: 87, flag: "🇧🇪", conf: "UEFA", group: "G", seed: 18 },
+        "Croatia": { rating: 86, flag: "🇭🇷", conf: "UEFA", group: "L", seed: 6 },
+        "Uruguay": { rating: 85, flag: "🇺🇾", conf: "CONMEBOL", group: "H", seed: 11 },
+        "Colombia": { rating: 85, flag: "🇨🇴", conf: "CONMEBOL", group: "K", seed: 17 },
+        "Morocco": { rating: 84, flag: "🇲🇦", conf: "CAF", group: "C", seed: 16 },
+        "Switzerland": { rating: 82, flag: "🇨🇭", conf: "UEFA", group: "B", seed: 19 },
+        "Japan": { rating: 81, flag: "🇯🇵", conf: "AFC", group: "F", seed: 2 },
+        "United States": { rating: 80, flag: "🇺🇸", conf: "CONCACAF", group: "D", seed: 7 },
+        "Mexico": { rating: 79, flag: "🇲🇽", conf: "CONCACAF", group: "A", seed: 10 },
+        "Norway": { rating: 79, flag: "🇳🇴", conf: "UEFA", group: "I", seed: 20 },
+        "Ecuador": { rating: 78, flag: "🇪🇨", conf: "CONMEBOL", group: "E", seed: 21 },
+        "Turkey": { rating: 77, flag: "🇹🇷", conf: "UEFA", group: "D", seed: 22 },
+        "Sweden": { rating: 77, flag: "🇸🇪", conf: "UEFA", group: "F", seed: 23 },
+        "Senegal": { rating: 77, flag: "🇸🇳", conf: "CAF", group: "I", seed: 9 },
+        "South Korea": { rating: 76, flag: "🇰🇷", conf: "AFC", group: "A", seed: 15 },
+        "Australia": { rating: 75, flag: "🇦🇺", conf: "AFC", group: "D", seed: 24 },
+        "Austria": { rating: 76, flag: "🇦🇹", conf: "UEFA", group: "J", seed: 25 },
+        "Ivory Coast": { rating: 75, flag: "🇨🇮", conf: "CAF", group: "E", seed: 26 },
+        "Egypt": { rating: 75, flag: "🇪🇬", conf: "CAF", group: "G", seed: 27 },
+        "Iran": { rating: 74, flag: "🇮🇷", conf: "AFC", group: "G", seed: 28 },
+        "Czechia": { rating: 73, flag: "🇨🇿", conf: "UEFA", group: "A", seed: 29 },
+        "Canada": { rating: 73, flag: "🇨🇦", conf: "CONCACAF", group: "B", seed: 30 },
+        "Algeria": { rating: 73, flag: "🇩🇿", conf: "CAF", group: "J", seed: 31 },
+        "Scotland": { rating: 72, flag: "🏴", conf: "UEFA", group: "C", seed: 32 },
+        "Saudi Arabia": { rating: 71, flag: "🇸🇦", conf: "AFC", group: "H", seed: 33 },
+        "Paraguay": { rating: 72, flag: "🇵🇾", conf: "CONMEBOL", group: "D", seed: 34 },
+        "Ghana": { rating: 71, flag: "🇬🇭", conf: "CAF", group: "L", seed: 35 },
+        "Tunisia": { rating: 70, flag: "🇹🇳", conf: "CAF", group: "F", seed: 36 },
+        "Qatar": { rating: 69, flag: "🇶🇦", conf: "AFC", group: "B", seed: 37 },
+        "Panama": { rating: 69, flag: "🇵🇦", conf: "CONCACAF", group: "L", seed: 38 },
+        "Bosnia and Herzegovina": { rating: 68, flag: "🇧🇦", conf: "UEFA", group: "B", seed: 39 },
+        "South Africa": { rating: 67, flag: "🇿🇦", conf: "CAF", group: "A", seed: 40 },
+        "DR Congo": { rating: 66, flag: "🇨🇩", conf: "CAF", group: "K", seed: 41 },
+        "Uzbekistan": { rating: 65, flag: "🇺🇿", conf: "AFC", group: "K", seed: 42 },
+        "Iraq": { rating: 65, flag: "🇮🇶", conf: "AFC", group: "I", seed: 43 },
+        "Cape Verde": { rating: 64, flag: "🇨🇻", conf: "CAF", group: "H", seed: 44 },
+        "Jordan": { rating: 63, flag: "🇯🇴", conf: "AFC", group: "J", seed: 45 },
+        "Curacao": { rating: 61, flag: "🇨🇼", conf: "CONCACAF", group: "E", seed: 46 },
+        "Haiti": { rating: 61, flag: "🇭🇹", conf: "CONCACAF", group: "C", seed: 47 },
+        "New Zealand": { rating: 60, flag: "🇳🇿", conf: "OFC", group: "G", seed: 48 }
+      };
+
+      // ─── STATE MANAGEMENT ───
+      let activeRatings = JSON.parse(JSON.stringify(teamsData)); // deep copy ratings
+      let injuredPlayers = new Set();
+      
+      const starPlayers = {
+        mbappe: { name: "Kylián Mbappé", team: "France", penalty: 7 },
+        messi: { name: "Lionel Messi", team: "Argentina", penalty: 8 },
+        bellingham: { name: "Jude Bellingham", team: "England", penalty: 6 },
+        vinicius: { name: "Vinícius Júnior", team: "Brazil", penalty: 7 },
+        yamal: { name: "Lamine Yamal", team: "Spain", penalty: 5 },
+        ronaldo: { name: "Cristiano Ronaldo", team: "Portugal", penalty: 5 },
+        haaland: { name: "Erling Haaland", team: "Norway", penalty: 8 },
+        debruyne: { name: "Kevin De Bruyne", team: "Belgium", penalty: 7 }
+      };
+
+      // Hosts list (USA, Mexico, Canada)
+      const hostNations = ["United States", "Mexico", "Canada"];
+
+      // ─── SELECTORS FILL ───
+      const selectA = document.getElementById("selectTeamA");
+      const selectB = document.getElementById("selectTeamB");
+      
+      // Sort teams alphabetically
+      const sortedTeams = Object.keys(teamsData).sort();
+      
+      sortedTeams.forEach((team) => {
+        const optionA = document.createElement("option");
+        optionA.value = team;
+        optionA.textContent = `${teamsData[team].flag} ${team}`;
+        selectA.appendChild(optionA);
+
+        const optionB = document.createElement("option");
+        optionB.value = team;
+        optionB.textContent = `${teamsData[team].flag} ${team}`;
+        selectB.appendChild(optionB);
+      });
+
+      // Set default selectors
+      selectA.value = "Brazil";
+      selectB.value = "Germany";
+
+      // ─── COUNT-UP STATISTICS ANIMATION ───
+      const animateCount = (id, target, speed = 30) => {
+        let count = 0;
+        const el = document.getElementById(id);
+        const interval = setInterval(() => {
+          count += Math.ceil(target / 15);
+          if (count >= target) {
+            count = target;
+            clearInterval(interval);
+          }
+          el.textContent = count.toLocaleString();
+        }, speed);
+      };
+
+      animateCount("stat-teams", 48, 50);
+      animateCount("stat-matches", 104, 30);
+      animateCount("stat-hosts", 3, 100);
+      animateCount("stat-champions", 1, 200);
+
+      // ─── NAV NAVIGATION ROUTING ───
+      const navItems = document.querySelectorAll(".nav-item");
+      navItems.forEach(item => {
+        item.addEventListener("click", (e) => {
+          e.preventDefault();
+          navItems.forEach(n => n.classList.remove("active"));
+          item.classList.add("active");
+
+          const targetId = item.getAttribute("data-target");
+          const targetSection = document.getElementById(targetId);
+          if (targetSection) {
+            window.scrollTo({
+              top: targetSection.offsetTop - 20,
+              behavior: "smooth"
+            });
+          }
+        });
+      });
+
+      // ─── PROGRESS BARS INITIAL ANIMATION ───
+      const progressFills = document.querySelectorAll(".progress-fill");
+      setTimeout(() => {
+        progressFills.forEach(fill => {
+          const pct = fill.getAttribute("data-pct");
+          fill.style.width = `${pct}%`;
+        });
+      }, 300);
+
+      // ─── SETTINGS INPUT HANDLER ───
+      const simRange = document.getElementById("simRangeInput");
+      const simLabel = document.getElementById("simCountLabel");
+      simRange.addEventListener("input", (e) => {
+        simLabel.textContent = parseInt(e.target.value).toLocaleString();
+      });
+
+      // ─── INJURY simulator recalculations ───
+      const checkboxes = document.querySelectorAll(".injury-checkbox");
+      const recalcBox = document.getElementById("recalcBox");
+      const winProbCard = document.getElementById("winProbCard");
+
+      checkboxes.forEach(box => {
+        box.addEventListener("change", (e) => {
+          const playerKey = e.target.value;
+          
+          if (e.target.checked) {
+            injuredPlayers.add(playerKey);
+          } else {
+            injuredPlayers.delete(playerKey);
+          }
+
+          // Show recalculated warning text
+          recalcBox.classList.add("active");
+          winProbCard.classList.add("shimmer-active");
+
+          // Reset active ratings to base ratings
+          activeRatings = JSON.parse(JSON.stringify(teamsData));
+
+          // Apply injury reductions
+          injuredPlayers.forEach(pk => {
+            const star = starPlayers[pk];
+            if (activeRatings[star.team]) {
+              activeRatings[star.team].rating -= star.penalty;
+            }
+          });
+
+          // Simulate ML calculation delay
+          setTimeout(() => {
+            recalcBox.classList.remove("active");
+            winProbCard.classList.remove("shimmer-active");
+            
+            // Recalculate and update top 5 Win Probabilities
+            updateTopFiveProbs();
+            
+            // If predict result display is open, re-run predict match automatically
+            const resultPanel = document.getElementById("resultPanel");
+            if (resultPanel.classList.contains("active")) {
+              predictMatchup();
+            }
+          }, 800);
+        });
+      });
+
+      // Recalculate Win Probabilities based on active settings and ratings
+      function calculateWinProbs() {
+        const hostAdv = document.getElementById("hostAdvantageToggle").checked;
+        const recentForm = document.getElementById("recentFormToggle").checked;
+        
+        let scores = {};
+        let totalScore = 0;
+
+        for (let team in activeRatings) {
+          let rating = activeRatings[team].rating;
+
+          // Apply host advantage settings
+          if (hostAdv && hostNations.includes(team)) {
+            rating += 5; // +5 rating boost for home ground
+          }
+          
+          // Apply recent form settings
+          if (recentForm) {
+            // High rankings get positive form factor, lower rankings get slightly lesser
+            const rankFactor = 1 + (100 - rating) * 0.001;
+            rating *= rankFactor;
+          }
+
+          // Exponential power distribution to represent tournament simulator probabilities
+          let score = Math.pow(rating, 4.5);
+          scores[team] = score;
+          totalScore += score;
+        }
+
+        // Generate probability percentages
+        let probs = [];
+        for (let team in activeRatings) {
+          let p = (scores[team] / totalScore) * 100;
+          probs.push({
+            name: team,
+            flag: activeRatings[team].flag,
+            prob: p
+          });
+        }
+
+        // Sort descending
+        probs.sort((a, b) => b.prob - a.prob);
+        return probs;
+      }
+
+      function updateTopFiveProbs() {
+        const listContainer = document.getElementById("topFiveList");
+        const newProbs = calculateWinProbs().slice(0, 5);
+        
+        listContainer.innerHTML = "";
+
+        // Render top 5
+        newProbs.forEach((item, index) => {
+          const row = document.createElement("div");
+          row.className = "win-prob-row";
+          
+          row.innerHTML = `
+            <div class="win-prob-info">
+              <span class="win-prob-team"><span>${item.flag}</span> ${item.name}</span>
+              <span class="win-prob-pct">${item.prob.toFixed(1)}%</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" style="width: 0%" data-pct="${item.prob.toFixed(1)}"></div>
+            </div>
+          `;
+          listContainer.appendChild(row);
+        });
+
+        // Trigger width fill transition
+        setTimeout(() => {
+          const fills = listContainer.querySelectorAll(".progress-fill");
+          fills.forEach(fill => {
+            const pct = fill.getAttribute("data-pct");
+            fill.style.width = `${pct}%`;
+          });
+        }, 50);
+      }
+
+      // ─── RE-RUN SIMULATION ACTION ───
+      const rerunBtn = document.getElementById("rerunSimBtn");
+      const rerunText = document.getElementById("rerunOverlayText");
+
+      rerunBtn.addEventListener("click", () => {
+        rerunText.textContent = `🔄 Recalculating ${parseInt(simRange.value).toLocaleString()} simulations...`;
+        rerunText.classList.add("show");
+
+        // Add visual card shimmer
+        winProbCard.classList.add("shimmer-active");
+
+        setTimeout(() => {
+          rerunText.classList.remove("show");
+          winProbCard.classList.remove("shimmer-active");
+
+          // Update win probabilities with small random variations to emulate Monte Carlo variance
+          updateTopFiveProbsWithVariance();
+          
+          // Animate Bracket Champion slightly
+          animateBracketChampion();
+        }, 1200);
+      });
+
+      function updateTopFiveProbsWithVariance() {
+        const listContainer = document.getElementById("topFiveList");
+        let newProbs = calculateWinProbs().slice(0, 5);
+        
+        // Add minor variance (±1.5%) and normalize
+        let total = 0;
+        newProbs = newProbs.map(item => {
+          let varVal = (Math.random() * 3) - 1.5;
+          let updatedProb = Math.max(1.0, item.prob + varVal);
+          total += updatedProb;
+          return { ...item, prob: updatedProb };
+        });
+
+        listContainer.innerHTML = "";
+
+        newProbs.forEach((item) => {
+          const row = document.createElement("div");
+          row.className = "win-prob-row";
+          
+          // Re-normalize to ensure the original sum is conserved roughly
+          const normalized = (item.prob / total) * 54.8; // default top 5 sum is around ~55%
+          row.innerHTML = `
+            <div class="win-prob-info">
+              <span class="win-prob-team"><span>${item.flag}</span> ${item.name}</span>
+              <span class="win-prob-pct">${normalized.toFixed(1)}%</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" style="width: 0%" data-pct="${normalized.toFixed(1)}"></div>
+            </div>
+          `;
+          listContainer.appendChild(row);
+        });
+
+        setTimeout(() => {
+          const fills = listContainer.querySelectorAll(".progress-fill");
+          fills.forEach(fill => {
+            const pct = fill.getAttribute("data-pct");
+            fill.style.width = `${pct}%`;
+          });
+        }, 50);
+      }
+
+      function animateBracketChampion() {
+        const champText = document.getElementById("champText");
+        const list = calculateWinProbs();
+        const topTeam = list[0]; // Highest rating/prob team becomes simulated winner
+
+        champText.style.opacity = "0";
+        setTimeout(() => {
+          champText.innerHTML = `${topTeam.flag} ${topTeam.name.toUpperCase()} ⭐`;
+          champText.style.opacity = "1";
+        }, 300);
+      }
+
+      // ─── MATCH PREDICTOR CALCULATIONS ───
+      const predictBtn = document.getElementById("predictBtn");
+      predictBtn.addEventListener("click", predictMatchup);
+
+      function predictMatchup() {
+        const teamA = selectA.value;
+        const teamB = selectB.value;
+
+        if (teamA === teamB) {
+          alert("Please select two different teams for predictions.");
+          return;
+        }
+
+        const ratingA = activeRatings[teamA].rating;
+        const ratingB = activeRatings[teamB].rating;
+
+        // Base Probabilities Formula
+        let baseProb = ratingA / (ratingA + ratingB);
+
+        // Apply Custom settings in Predictor
+        const hostAdv = document.getElementById("hostAdvantageToggle").checked;
+        const penalties = document.getElementById("penaltiesToggle").checked;
+
+        if (hostAdv) {
+          if (hostNations.includes(teamA)) baseProb += 0.05;
+          if (hostNations.includes(teamB)) baseProb -= 0.05;
+        }
+
+        // Draw chances is higher if rating difference is low
+        let drawProb = 0.22 - Math.abs(ratingA - ratingB) * 0.002;
+        if (penalties) drawProb *= 0.5; // Penalties setting reduces drawing chance
+
+        drawProb = Math.max(0.08, Math.min(0.28, drawProb));
+        
+        let winProb = baseProb * (1 - drawProb);
+        let lossProb = (1 - baseProb) * (1 - drawProb);
+
+        // Add ±15% random variance to Win and Loss
+        const varianceWin = (Math.random() * 0.3) - 0.15;
+        const varianceLoss = (Math.random() * 0.3) - 0.15;
+
+        let finalWin = Math.max(0.05, winProb + varianceWin);
+        let finalLoss = Math.max(0.05, lossProb + varianceLoss);
+        let finalDraw = Math.max(0.05, drawProb - (varianceWin + varianceLoss) * 0.3);
+
+        // Normalize sum to 100%
+        const sum = finalWin + finalDraw + finalLoss;
+        const pWin = (finalWin / sum) * 100;
+        const pDraw = (finalDraw / sum) * 100;
+        const pLoss = (finalLoss / sum) * 100;
+
+        // Display results
+        const resultPanel = document.getElementById("resultPanel");
+        resultPanel.classList.add("active");
+
+        const winPill = document.getElementById("winPill");
+        const drawPill = document.getElementById("drawPill");
+        const lossPill = document.getElementById("lossPill");
+
+        winPill.textContent = `${activeRatings[teamA].flag} ${teamA.toUpperCase()} WIN: ${pWin.toFixed(1)}%`;
+        drawPill.textContent = `DRAW: ${pDraw.toFixed(1)}%`;
+        lossPill.textContent = `${activeRatings[teamB].flag} ${teamB.toUpperCase()} WIN: ${pLoss.toFixed(1)}%`;
+
+        // Radial Gauge Arc Fill (283 = 0% filled, 0 = 100% filled)
+        const gaugeFill = document.getElementById("gaugeFill");
+        const gaugePercent = document.getElementById("gaugePercent");
+        const gaugeStatus = document.getElementById("gaugeStatus");
+
+        let dominantPct = pWin;
+        let dominantStatus = `${teamA} Dominant`;
+        gaugeFill.style.stroke = "var(--accent-green)";
+
+        if (pLoss > pWin && pLoss > pDraw) {
+          dominantPct = pLoss;
+          dominantStatus = `${teamB} Dominant`;
+          gaugeFill.style.stroke = "var(--gold)";
+        } else if (pDraw > pWin && pDraw > pLoss) {
+          dominantPct = pDraw;
+          dominantStatus = "Closely Matched (Draw)";
+          gaugeFill.style.stroke = "var(--text-secondary)";
+        }
+
+        gaugePercent.textContent = `${dominantPct.toFixed(1)}%`;
+        gaugeStatus.textContent = dominantStatus;
+
+        // Calculate offset (percentage of 283 half-circle)
+        const offset = 283 - (dominantPct / 100) * 283;
+        gaugeFill.style.strokeDashoffset = offset;
+
+        // Animate Matchup Strengths
+        const factors = ["Form", "Player", "H2h", "Inj", "Home"];
+        factors.forEach(f => {
+          let randVal = Math.floor(Math.random() * 40) + 50; // default 50-90%
+          
+          if (f === "Inj") {
+            // Injury Factor depends on injured players
+            const teamAInjured = Array.from(injuredPlayers).some(pk => starPlayers[pk].team === teamA);
+            const teamBInjured = Array.from(injuredPlayers).some(pk => starPlayers[pk].team === teamB);
+            
+            if (teamAInjured && teamBInjured) randVal = 50;
+            else if (teamAInjured) randVal = 35;
+            else if (teamBInjured) randVal = 85;
+            else randVal = 95;
+          }
+
+          if (f === "Home") {
+            const hasHomeA = hostNations.includes(teamA);
+            const hasHomeB = hostNations.includes(teamB);
+            if (hasHomeA && hasHomeB) randVal = 50;
+            else if (hasHomeA) randVal = 85;
+            else if (hasHomeB) randVal = 20;
+            else randVal = 10; // no home ground advantage
+          }
+
+          document.getElementById(`factor${f}Val`).textContent = `${randVal}%`;
+          document.getElementById(`factor${f}Fill`).style.width = `${randVal}%`;
+        });
+      }
+
+      // ─── TOURNAMENT BRACKET / GROUP VIEW TOGGLES ───
+      const groupBtn = document.getElementById("groupBtn");
+      const knockoutBtn = document.getElementById("knockoutBtn");
+      const bracketLayout = document.getElementById("bracketLayout");
+      const groupGrid = document.getElementById("groupGrid");
+
+      // Generate Groups data representation dynamically
+      const groupTeams = {
+        "Group A": ["Mexico", "South Africa", "South Korea", "Czechia"],
+        "Group B": ["Canada", "Bosnia and Herzegovina", "Qatar", "Switzerland"],
+        "Group C": ["Brazil", "Morocco", "Haiti", "Scotland"],
+        "Group D": ["United States", "Paraguay", "Australia", "Turkey"],
+        "Group E": ["Germany", "Curacao", "Ivory Coast", "Ecuador"],
+        "Group F": ["Netherlands", "Japan", "Sweden", "Tunisia"],
+        "Group G": ["Belgium", "Egypt", "Iran", "New Zealand"],
+        "Group H": ["Spain", "Cape Verde", "Saudi Arabia", "Uruguay"],
+        "Group I": ["France", "Senegal", "Iraq", "Norway"],
+        "Group J": ["Argentina", "Algeria", "Austria", "Jordan"],
+        "Group K": ["Portugal", "DR Congo", "Uzbekistan", "Colombia"],
+        "Group L": ["England", "Croatia", "Ghana", "Panama"]
+      };
+
+      function renderGroupStandings() {
+        groupGrid.innerHTML = "";
+        
+        for (let group in groupTeams) {
+          const card = document.createElement("div");
+          card.className = "group-card";
+          
+          let tableRows = "";
+          // Sort teams in group by rating + mock stats
+          const sortedGroupTeams = [...groupTeams[group]].sort((a,b) => activeRatings[b].rating - activeRatings[a].rating);
+
+          sortedGroupTeams.forEach((team, index) => {
+            const rating = activeRatings[team].rating;
+            let pts = 0, gd = 0, w = 0, d = 0, l = 0;
+            
+            if (index === 0) { w = 2; d = 1; pts = 7; gd = 4; }
+            else if (index === 1) { w = 1; d = 2; pts = 5; gd = 2; }
+            else if (index === 2) { w = 1; d = 1; l = 1; pts = 4; gd = 0; }
+            else { l = 3; pts = 0; gd = -6; }
+
+            tableRows += `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${activeRatings[team].flag} ${team}</td>
+                <td>3</td>
+                <td>${w}</td>
+                <td>${d}</td>
+                <td>${l}</td>
+                <td>${gd > 0 ? '+' + gd : gd}</td>
+                <td><strong>${pts}</strong></td>
+              </tr>
+            `;
+          });
+
+          card.innerHTML = `
+            <h4 class="group-card-header">${group}</h4>
+            <table class="group-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Team</th>
+                  <th>P</th>
+                  <th>W</th>
+                  <th>D</th>
+                  <th>L</th>
+                  <th>GD</th>
+                  <th>PTS</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${tableRows}
+              </tbody>
+            </table>
+          `;
+          groupGrid.appendChild(card);
+        }
+      }
+
+      groupBtn.addEventListener("click", () => {
+        groupBtn.classList.add("active");
+        knockoutBtn.classList.remove("active");
+        bracketLayout.style.display = "none";
+        groupGrid.style.display = "grid";
+        renderGroupStandings();
+      });
+
+      knockoutBtn.addEventListener("click", () => {
+        knockoutBtn.classList.add("active");
+        groupBtn.classList.remove("active");
+        groupGrid.style.display = "none";
+        bracketLayout.style.display = "grid";
+      });
+
+    });
+  </script>
+</body>
+</html>
