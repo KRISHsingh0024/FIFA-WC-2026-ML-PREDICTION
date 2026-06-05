@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://fifa-wc-2026-ml-prediction-api.onrender.com/api/:path*"
+      "destination": "https://fifa-wc-2026-ml-prediction.onrender.com/api/:path*"
     }
   ]
 }
