@@ -248,7 +248,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
                   placeholder="name@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="auth-input pl-10"
+                  className="auth-input"
                 />
                 <Mail size={15} className="absolute left-3.5 top-3.5 text-[#3f5669]" />
               </div>
@@ -285,7 +285,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
                   placeholder="123456"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
-                  className="auth-input pl-10 tracking-[0.2em] font-semibold text-center text-base"
+                  className="auth-input pr-[2.75rem] tracking-[0.2em] font-semibold text-center text-base"
                 />
                 <ShieldCheck size={16} className="absolute left-3.5 top-3.5 text-[#3f5669]" />
               </div>
