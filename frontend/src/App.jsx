@@ -1888,6 +1888,8 @@ function LandingView({ simResults, setActiveTab }) {
     .map(([name, probs]) => ({ name, ...probs }))
     .sort((a, b) => b.champion_prob - a.champion_prob)
   const top5 = contenders.slice(0, 5)
+  const [showAllTeams, setShowAllTeams] = useState(false)
+  const displayedTeams = showAllTeams ? contenders : contenders.slice(0, 15)
 
   return (
     <motion.div 
@@ -2005,7 +2007,7 @@ function LandingView({ simResults, setActiveTab }) {
           </motion.div>
         </div>
 
-        {/* Right Side: Contenders Outlook */}
+        {/* Right Side: Contenders Outlook (compact top 5) */}
         <div className="lg:col-span-3">
           <motion.div 
             className="glass-panel p-6 space-y-4"
@@ -2043,6 +2045,111 @@ function LandingView({ simResults, setActiveTab }) {
         </div>
 
       </div>
+
+      {/* ─── FULL TOURNAMENT STATS TABLE ─── */}
+      <motion.div
+        className="glass-panel p-6 space-y-4"
+        variants={staggerItem}
+      >
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-[9px] font-bold uppercase text-[#00e87b] tracking-[0.2em] block">MONTE CARLO SIMULATION</span>
+            <h3 className="font-display text-2xl text-white tracking-wider">COMPLETE TOURNAMENT PROBABILITIES</h3>
+            <p className="text-[11px] text-[#7b93a8]">All 48 teams ranked by predicted championship probability across 1,000+ simulations</p>
+          </div>
+          <button
+            onClick={() => setShowAllTeams(!showAllTeams)}
+            className="text-[11px] font-semibold text-[#00e87b] hover:text-white border border-[#00e87b]/20 hover:border-[#00e87b]/40 px-4 py-2 rounded-lg bg-[#00e87b]/[0.05] hover:bg-[#00e87b]/[0.1] transition-all cursor-pointer whitespace-nowrap"
+          >
+            {showAllTeams ? 'Show Top 15' : `Show All ${contenders.length} Teams`}
+          </button>
+        </div>
+
+        {/* Table Header */}
+        <div className="grid grid-cols-[40px_1fr_80px_80px_80px_80px_80px] gap-2 px-3 py-2 border-b border-white/[0.06] text-[9px] font-bold uppercase tracking-[0.15em] text-[#3f5669]">
+          <span>#</span>
+          <span>Team</span>
+          <span className="text-center">Champion</span>
+          <span className="text-center">Finalist</span>
+          <span className="text-center">Semi-Final</span>
+          <span className="text-center">Quarter-Final</span>
+          <span className="text-center">Round of 16</span>
+        </div>
+
+        {/* Table Body */}
+        <div className="space-y-0.5">
+          {displayedTeams.map((team, idx) => {
+            const maxChamp = contenders[0]?.champion_prob || 1
+            const champBar = (team.champion_prob / maxChamp) * 100
+            const isTop3 = idx < 3
+            return (
+              <div 
+                key={team.name}
+                className={`grid grid-cols-[40px_1fr_80px_80px_80px_80px_80px] gap-2 px-3 py-2.5 rounded-lg transition-all hover:bg-white/[0.03] ${
+                  isTop3 ? 'bg-[#00e87b]/[0.02] border border-[#00e87b]/[0.06]' : 'border border-transparent'
+                }`}
+              >
+                {/* Rank */}
+                <span className={`text-[12px] font-display font-bold ${
+                  idx === 0 ? 'text-[#d4a54a]' : idx === 1 ? 'text-[#c0c0c0]' : idx === 2 ? 'text-[#cd7f32]' : 'text-[#3f5669]'
+                }`}>
+                  {idx + 1}
+                </span>
+
+                {/* Team Name + Flag + Bar */}
+                <div className="flex items-center gap-2 min-w-0">
+                  {getFlagImg(team.name, "w-5 h-3 object-cover rounded-xs shrink-0 border border-white/[0.08]")}
+                  <span className="text-[12px] font-semibold text-white truncate">{team.name}</span>
+                  <div className="flex-1 h-1 bg-white/[0.02] rounded-full overflow-hidden ml-1 min-w-[30px] hidden md:block">
+                    <div 
+                      className={`h-full rounded-full ${isTop3 ? 'bg-[#00e87b]' : 'bg-[#00e87b]/50'}`}
+                      style={{ width: `${champBar}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Champion % */}
+                <span className={`text-center text-[12px] font-bold ${
+                  team.champion_prob >= 0.1 ? 'text-[#00e87b]' : team.champion_prob >= 0.03 ? 'text-white' : 'text-[#7b93a8]'
+                }`}>
+                  {(team.champion_prob * 100).toFixed(1)}%
+                </span>
+
+                {/* Finalist % */}
+                <span className="text-center text-[12px] font-medium text-[#7b93a8]">
+                  {(team.finalist_prob * 100).toFixed(1)}%
+                </span>
+
+                {/* Semi-Final % */}
+                <span className="text-center text-[12px] font-medium text-[#7b93a8]">
+                  {(team.semi_finalist_prob * 100).toFixed(1)}%
+                </span>
+
+                {/* QF % */}
+                <span className="text-center text-[12px] font-medium text-[#7b93a8]">
+                  {(team.quarter_finalist_prob * 100).toFixed(1)}%
+                </span>
+
+                {/* R16 % */}
+                <span className="text-center text-[12px] font-medium text-[#3f5669]">
+                  {(team.round_of_16_prob * 100).toFixed(1)}%
+                </span>
+              </div>
+            )
+          })}
+        </div>
+
+        {!showAllTeams && contenders.length > 15 && (
+          <div className="text-center pt-2">
+            <button
+              onClick={() => setShowAllTeams(true)}
+              className="text-[11px] text-[#7b93a8] hover:text-[#00e87b] transition-colors cursor-pointer"
+            >
+              + {contenders.length - 15} more teams...
+            </button>
+          </div>
+        )}
+      </motion.div>
 
       {/* Bottom Row info cards */}
       <motion.div 
