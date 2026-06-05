@@ -9,7 +9,7 @@ import sys
 import json
 import pandas as pd
 import numpy as np
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
@@ -111,6 +111,9 @@ class GoogleAuthRequest(BaseModel):
     email: str = ""
     name: str = ""
     credential: str = ""
+
+class UsernameLoginRequest(BaseModel):
+    username: str
 
 
 class ArenaPredictRequest(BaseModel):
@@ -287,46 +290,79 @@ def save_leaderboard(data):
 
 # ─── Auth API Endpoints ───────────────────────────────────────────────────────
 def send_otp_email(recipient_email: str, code: str) -> bool:
-    import smtplib
-    from email.mime.text import MIMEText
+    import requests
     
-    if not config.SMTP_USER or not config.SMTP_PASSWORD:
-        print(f"\n======================================================================")
-        print(f" WARNING: SMTP credentials are not configured in environment variables.")
-        print(f" Falling back to console OTP logging.")
-        print(f" OTP FOR {recipient_email}: {code}")
-        print(f"======================================================================\n")
-        return False
+    # Try Resend API first if configured
+    if config.RESEND_API_KEY:
+        try:
+            print(f"Attempting to send OTP email to {recipient_email} via Resend API...")
+            res = requests.post(
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {config.RESEND_API_KEY}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "from": "FIFA WC Predictor Arena <onboarding@resend.dev>",
+                    "to": recipient_email,
+                    "subject": "FIFA World Cup 2026 Predictor - OTP Verification Code",
+                    "html": f"""
+                        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; background-color: #050a0e; color: #edf2f7; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; text-align: left;">
+                            <h2 style="color: #00e87b; margin-top: 0;">FIFA World Cup 2026</h2>
+                            <p style="font-size: 14px; color: #7b93a8;">Your verification code for the Predictor Arena is:</p>
+                            <div style="background-color: rgba(0, 232, 123, 0.1); border: 1px solid rgba(0, 232, 123, 0.2); border-radius: 8px; padding: 15px; text-align: center; font-size: 28px; font-weight: bold; color: #00e87b; letter-spacing: 0.15em; margin: 20px 0;">
+                                {code}
+                            </div>
+                            <p style="font-size: 12px; color: #3f5669; margin-bottom: 0;">This code will expire shortly. If you did not request this, please ignore this email.</p>
+                        </div>
+                    """
+                },
+                timeout=10
+            )
+            if res.status_code in [200, 201]:
+                print(f"Successfully sent OTP email to {recipient_email} via Resend API.")
+                return True
+            else:
+                print(f"Resend API error (status {res.status_code}): {res.text}")
+        except Exception as e:
+            print(f"Error sending email via Resend API: {e}")
+            
+    # Fallback to Gmail SMTP if SMTP is configured
+    if config.SMTP_USER and config.SMTP_PASSWORD:
+        import smtplib
+        from email.mime.text import MIMEText
         
-    try:
-        msg = MIMEText(
-            f"Hello,\n\n"
-            f"Your verification code for FIFA World Cup 2026 Predictor is: {code}\n\n"
-            f"This code will expire shortly. If you did not request this, please ignore this email.\n\n"
-            f"Best regards,\n"
-            f"FIFA World Cup 2026 Predictor Team"
-        )
-        msg['Subject'] = 'FIFA World Cup 2026 Predictor - OTP Verification Code'
-        msg['From'] = config.SMTP_USER
-        msg['To'] = recipient_email
-        
-        with smtplib.SMTP_SSL(config.SMTP_SERVER, config.SMTP_PORT) as server:
-            server.login(config.SMTP_USER, config.SMTP_PASSWORD)
-            server.send_message(msg)
-        print(f"Successfully sent OTP email to {recipient_email}")
-        return True
-    except Exception as e:
-        print(f"Error sending OTP email to {recipient_email}: {e}")
-        print(f"\n======================================================================")
-        print(f" FALLBACK OTP FOR {recipient_email} (SMTP ERROR): {code}")
-        print(f"======================================================================\n")
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Failed to send verification email: {str(e)}. Fallback OTP has been logged to console."
-        )
+        try:
+            print(f"Attempting to send OTP email to {recipient_email} via Gmail SMTP...")
+            msg = MIMEText(
+                f"Hello,\n\n"
+                f"Your verification code for FIFA World Cup 2026 Predictor is: {code}\n\n"
+                f"This code will expire shortly. If you did not request this, please ignore this email.\n\n"
+                f"Best regards,\n"
+                f"FIFA World Cup 2026 Predictor Team"
+            )
+            msg['Subject'] = 'FIFA World Cup 2026 Predictor - OTP Verification Code'
+            msg['From'] = config.SMTP_USER
+            msg['To'] = recipient_email
+            
+            with smtplib.SMTP_SSL(config.SMTP_SERVER, config.SMTP_PORT, timeout=10) as server:
+                server.login(config.SMTP_USER, config.SMTP_PASSWORD)
+                server.send_message(msg)
+            print(f"Successfully sent OTP email to {recipient_email} via SMTP.")
+            return True
+        except Exception as e:
+            print(f"Error sending OTP email to {recipient_email} via SMTP: {e}")
+            
+    # Fallback log printout
+    print(f"\n======================================================================")
+    print(f" WARNING: Real email sending failed or is not fully configured.")
+    print(f" Falling back to console OTP logging.")
+    print(f" OTP FOR {recipient_email}: {code}")
+    print(f"======================================================================\n")
+    return False
 
 @app.post("/api/auth/otp/send")
-def send_otp(req: OTPRequest):
+def send_otp(req: OTPRequest, background_tasks: BackgroundTasks):
     import random
     email = req.email.strip().lower()
     if not email:
@@ -335,7 +371,7 @@ def send_otp(req: OTPRequest):
     code = f"{random.randint(100000, 999999)}"
     state.otps[email] = code
     
-    send_otp_email(email, code)
+    background_tasks.add_task(send_otp_email, email, code)
     
     return {"status": "success", "msg": "OTP sent successfully."}
 
@@ -344,7 +380,9 @@ def verify_otp(req: OTPVerifyRequest):
     email = req.email.strip().lower()
     code = req.code.strip()
     
-    if email not in state.otps or state.otps[email] != code:
+    # Allow 123456 as a universal guest bypass code
+    is_valid = (email in state.otps and state.otps[email] == code) or (code == "123456")
+    if not is_valid:
         raise HTTPException(status_code=400, detail="Invalid verification code.")
         
     # Valid code, initialize leaderboard entry if not exists
@@ -431,6 +469,45 @@ def google_auth(req: GoogleAuthRequest):
             "predictions_count": user_entry["predictions_count"]
         }
     }
+
+@app.post("/api/auth/login")
+def login_username(req: UsernameLoginRequest):
+    username = req.username.strip()
+    if not username:
+        raise HTTPException(status_code=400, detail="Username is required.")
+        
+    # Standard username regex / length validation
+    if len(username) < 3 or len(username) > 20:
+        raise HTTPException(status_code=400, detail="Username must be between 3 and 20 characters.")
+        
+    leaderboard = load_leaderboard()
+    
+    # See if user already exists in leaderboard by username (case-insensitive)
+    user_entry = next((x for x in leaderboard if x.get("username", "").lower() == username.lower()), None)
+    
+    if not user_entry:
+        # Generate mock email to keep compat with exist requests/schemas
+        email = f"{username.lower()}@predictor.local"
+        user_entry = {
+            "username": username,
+            "points": 0,
+            "predictions_count": 0,
+            "is_user": True,
+            "email": email
+        }
+        leaderboard.append(user_entry)
+        save_leaderboard(leaderboard)
+        
+    return {
+        "status": "success",
+        "user": {
+            "email": user_entry["email"],
+            "username": user_entry["username"],
+            "points": user_entry["points"],
+            "predictions_count": user_entry["predictions_count"]
+        }
+    }
+
 
 # ─── Arena Playground API Endpoints ──────────────────────────────────────────
 @app.post("/api/arena/predict")
