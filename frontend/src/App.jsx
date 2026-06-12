@@ -3366,6 +3366,9 @@ function LiveView({ setSelectedTeam, setActiveTab }) {
   const [autoSimulating, setAutoSimulating] = useState(false)
   const [selectedMatch, setSelectedMatch] = useState(null)
   const [fixtureStageFilter, setFixtureStageFilter] = useState('all')
+  const [subTab, setSubTab] = useState('sim')
+  const [comparisonData, setComparisonData] = useState([])
+  const [compLoading, setCompLoading] = useState(false)
 
   const fetchState = async () => {
     try {
@@ -3391,9 +3394,30 @@ function LiveView({ setSelectedTeam, setActiveTab }) {
     }
   }
 
+  const fetchComparison = async () => {
+    try {
+      setCompLoading(true)
+      const res = await fetch('/api/live/real_comparison')
+      if (res.ok) {
+        const data = await res.json()
+        setComparisonData(data.comparison)
+      }
+    } catch (err) {
+      console.error("Error fetching real comparison:", err)
+    } finally {
+      setCompLoading(false)
+    }
+  }
+
   useEffect(() => {
     fetchState()
   }, [])
+
+  useEffect(() => {
+    if (subTab === 'real') {
+      fetchComparison()
+    }
+  }, [subTab])
 
   useEffect(() => {
     let intervalId = null
@@ -3591,7 +3615,151 @@ function LiveView({ setSelectedTeam, setActiveTab }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      {/* Subtab Switcher */}
+      <div className="flex border-b border-white/[0.04] mb-6">
+        <button
+          onClick={() => setSubTab('sim')}
+          className={`px-5 py-3 text-xs font-bold tracking-wider uppercase transition relative cursor-pointer ${
+            subTab === 'sim' 
+              ? 'text-[#00e87b]' 
+              : 'text-[#7b93a8] hover:text-white'
+          }`}
+        >
+          Live Simulation Campaign
+          {subTab === 'sim' && (
+            <motion.div 
+              layoutId="subtab-indicator"
+              className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#00e87b]" 
+            />
+          )}
+        </button>
+        <button
+          onClick={() => setSubTab('real')}
+          className={`px-5 py-3 text-xs font-bold tracking-wider uppercase transition relative cursor-pointer ${
+            subTab === 'real' 
+              ? 'text-[#00e87b]' 
+              : 'text-[#7b93a8] hover:text-white'
+          }`}
+        >
+          Real WC vs AI Predictor
+          {subTab === 'real' && (
+            <motion.div 
+              layoutId="subtab-indicator"
+              className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#00e87b]" 
+            />
+          )}
+        </button>
+      </div>
+
+      {subTab === 'real' ? (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h3 className="font-display text-xl text-white tracking-wider flex items-center gap-2">
+              <Activity size={18} className="text-[#00e87b]" />
+              REAL WORLD MATCHES VS AI PREDICTOR COMPARISON
+            </h3>
+            <span className="text-[10px] text-[#3f5669] font-bold uppercase tracking-wider bg-white/[0.02] border border-white/[0.04] px-2 py-1 rounded">
+              June 11 - 12 Matches
+            </span>
+          </div>
+
+          {compLoading ? (
+            <div className="flex h-64 items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#00e87b] border-t-transparent"></div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-slide-up">
+              {comparisonData.map((m) => {
+                const realDiff = m.real_goals_a - m.real_goals_b
+                const realOutcome = realDiff > 0 ? 'A' : realDiff < 0 ? 'B' : 'D'
+                
+                const modelA = m.prediction.team_a_win
+                const modelB = m.prediction.team_b_win
+                const modelD = m.prediction.draw
+                const maxProb = Math.max(modelA, modelB, modelD)
+                const predictedOutcome = maxProb === modelA ? 'A' : maxProb === modelB ? 'B' : 'D'
+                
+                const isOutcomeCorrect = realOutcome === predictedOutcome
+                const isExactScore = m.real_goals_a === m.prediction.goals_a && m.real_goals_b === m.prediction.goals_b
+
+                return (
+                  <div key={m.match_id} className="glass-panel p-6 space-y-5 relative overflow-hidden border border-white/[0.04] bg-[#0c1620]/25">
+                    <div className="flex justify-between items-center text-[10px] text-[#3f5669] font-bold uppercase tracking-wider">
+                      <span>{m.date} fixture</span>
+                      <span className="text-[#edf2f7] bg-white/[0.03] border border-white/[0.04] px-2 py-0.5 rounded">FT</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 divide-x divide-white/[0.04]">
+                      <div className="space-y-3.5 pr-2">
+                        <span className="block text-[9px] font-bold text-[#7b93a8] uppercase tracking-wider text-center">Real Match Score</span>
+                        
+                        <div className="flex items-center justify-between gap-1 text-center py-2 bg-white/[0.01] border border-white/[0.03] rounded-xl">
+                          <div className="w-5/12 flex flex-col items-center">
+                            {getFlagImg(m.team_a, "w-7 h-5 object-cover rounded shadow-xs mb-1.5")}
+                            <span className="text-[11px] font-bold text-white truncate max-w-[80px]">{m.team_a}</span>
+                          </div>
+                          <span className="w-2/12 font-display text-2xl text-[#edf2f7]">{m.real_goals_a} : {m.real_goals_b}</span>
+                          <div className="w-5/12 flex flex-col items-center">
+                            {getFlagImg(m.team_b, "w-7 h-5 object-cover rounded shadow-xs mb-1.5")}
+                            <span className="text-[11px] font-bold text-white truncate max-w-[80px]">{m.team_b}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3.5 pl-4">
+                        <span className="block text-[9px] font-bold text-[#7b93a8] uppercase tracking-wider text-center">AI Predicted Score</span>
+                        
+                        <div className="flex items-center justify-between gap-1 text-center py-2 bg-white/[0.01] border border-white/[0.03] rounded-xl">
+                          <div className="w-5/12 flex flex-col items-center">
+                            {getFlagImg(m.team_a, "w-7 h-5 object-cover rounded shadow-xs mb-1.5")}
+                            <span className="text-[11px] font-semibold text-[#7b93a8] truncate max-w-[80px]">{m.team_a}</span>
+                          </div>
+                          <span className="w-2/12 font-display text-2xl text-[#00e87b] text-green-glow">{m.prediction.goals_a} : {m.prediction.goals_b}</span>
+                          <div className="w-5/12 flex flex-col items-center">
+                            {getFlagImg(m.team_b, "w-7 h-5 object-cover rounded shadow-xs mb-1.5")}
+                            <span className="text-[11px] font-semibold text-[#7b93a8] truncate max-w-[80px]">{m.team_b}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 pt-1 border-t border-white/[0.03]">
+                      <span className="block text-[9px] font-bold text-[#3f5669] uppercase tracking-wider">Model Prediction Probabilities</span>
+                      <div className="flex justify-between text-[10px] text-[#7b93a8] font-mono">
+                        <span>{m.team_a}: {(modelA * 100).toFixed(1)}%</span>
+                        <span>Draw: {(modelD * 100).toFixed(1)}%</span>
+                        <span>{m.team_b}: {(modelB * 100).toFixed(1)}%</span>
+                      </div>
+                      <div className="h-3 w-full rounded-md overflow-hidden flex bg-white/[0.03]">
+                        <div className="bg-blue-500/70" style={{ width: `${modelA * 100}%` }} />
+                        <div className="bg-[#7b93a8]/30" style={{ width: `${modelD * 100}%` }} />
+                        <div className="bg-red-500/60" style={{ width: `${modelB * 100}%` }} />
+                      </div>
+                    </div>
+
+                    <div className="pt-1 text-center">
+                      {isExactScore ? (
+                        <div className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-3 py-1.5 rounded-full shadow-[0_0_12px_rgba(16,185,129,0.15)]">
+                          🔥 EXACT SCORE MATCHED ({m.real_goals_a} - {m.real_goals_b})
+                        </div>
+                      ) : isOutcomeCorrect ? (
+                        <div className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#00e87b] bg-[#00e87b]/10 border border-[#00e87b]/25 px-3 py-1.5 rounded-full">
+                          ✓ CORRECT OUTCOME PREDICTED ({predictedOutcome === 'A' ? `${m.team_a} Win` : predictedOutcome === 'B' ? `${m.team_b} Win` : 'Draw'})
+                        </div>
+                      ) : (
+                        <div className="inline-flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-[#7b93a8] bg-white/[0.02] border border-white/[0.04] px-3 py-1.5 rounded-full">
+                          ✗ INCORRECT OUTCOME PREDICTION
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         <div className="lg:col-span-8 space-y-6">
           <div className="flex justify-between items-center">
             <h3 className="font-display text-xl text-white tracking-wider flex items-center gap-2">
@@ -3860,6 +4028,7 @@ function LiveView({ setSelectedTeam, setActiveTab }) {
           </div>
         </div>
       </div>
+      )}
 
       {selectedMatch && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 auth-backdrop">

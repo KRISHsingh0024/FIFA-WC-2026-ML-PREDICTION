@@ -1259,6 +1259,89 @@ def live_action(req: LiveActionRequest):
         save_live_tournament(t_state)
         return {"status": "success", "state": t_state}
 
+@app.get("/api/live/real_comparison")
+def get_real_comparison():
+    real_results_path = os.path.join(config.DATA_DIR, "real_results.json")
+    
+    if not os.path.exists(real_results_path):
+        initial_data = [
+            {
+                "match_id": "R_1",
+                "date": "June 11, 2026",
+                "team_a": "Mexico",
+                "team_b": "South Africa",
+                "real_goals_a": 2,
+                "real_goals_b": 0,
+                "status": "completed"
+            },
+            {
+                "match_id": "R_2",
+                "date": "June 12, 2026",
+                "team_a": "Canada",
+                "team_b": "Bosnia and Herzegovina",
+                "real_goals_a": 1,
+                "real_goals_b": 1,
+                "status": "completed"
+            },
+            {
+                "match_id": "R_3",
+                "date": "June 12, 2026",
+                "team_a": "United States",
+                "team_b": "Paraguay",
+                "real_goals_a": 2,
+                "real_goals_b": 1,
+                "status": "completed"
+            },
+            {
+                "match_id": "R_4",
+                "date": "June 12, 2026",
+                "team_a": "South Korea",
+                "team_b": "Czechia",
+                "real_goals_a": 0,
+                "real_goals_b": 0,
+                "status": "completed"
+            }
+        ]
+        with open(real_results_path, "w", encoding="utf-8") as f:
+            json.dump(initial_data, f, indent=4)
+            
+    try:
+        with open(real_results_path, "r", encoding="utf-8") as f:
+            matches = json.load(f)
+    except Exception as e:
+        print(f"Error loading real results: {e}")
+        return {"error": str(e)}
+        
+    comparison = []
+    for m in matches:
+        try:
+            probs = predict_match(m["team_a"], m["team_b"])
+            probs_dict = {
+                "team_a": m["team_a"],
+                "team_b": m["team_b"],
+                "team_a_win": probs["team_a_win"],
+                "draw": probs["draw"],
+                "team_b_win": probs["team_b_win"]
+            }
+            pred_a, pred_b, winner = simulate_goals(probs_dict, stage="group")
+        except Exception as e:
+            print(f"Prediction failed for comparison: {e}")
+            probs = {"team_a_win": 0.33, "draw": 0.34, "team_b_win": 0.33}
+            pred_a, pred_b = 1, 1
+            
+        comparison.append({
+            **m,
+            "prediction": {
+                "team_a_win": float(probs["team_a_win"]),
+                "draw": float(probs["draw"]),
+                "team_b_win": float(probs["team_b_win"]),
+                "goals_a": pred_a,
+                "goals_b": pred_b
+            }
+        })
+        
+    return {"comparison": comparison}
+
 # ─── Helper Functions ─────────────────────────────────────────────────────────
 def get_confederation(team_name: str) -> str:
     """Returns the football confederation for a team."""
