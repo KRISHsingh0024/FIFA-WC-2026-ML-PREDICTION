@@ -3362,12 +3362,14 @@ function LiveView({ setSelectedTeam, setActiveTab }) {
   const [tState, setTState] = useState(null)
   const [activeGroupTab, setActiveGroupTab] = useState('A')
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [autoSimulating, setAutoSimulating] = useState(false)
   const [selectedMatch, setSelectedMatch] = useState(null)
   const [fixtureStageFilter, setFixtureStageFilter] = useState('all')
 
   const fetchState = async () => {
     try {
+      setError(null)
       const res = await fetch('/api/live/state')
       if (res.ok) {
         const data = await res.json()
@@ -3378,9 +3380,12 @@ function LiveView({ setSelectedTeam, setActiveTab }) {
             setActiveGroupTab(todayMatches[0].group)
           }
         }
+      } else {
+        setError("Failed to retrieve live data from the server. (HTTP Status " + res.status + ")")
       }
     } catch (err) {
       console.error("Error fetching live tournament state:", err)
+      setError("Network error: Could not reach the backend server. It may be starting up or sleeping.")
     } finally {
       setLoading(false)
     }
@@ -3452,10 +3457,38 @@ function LiveView({ setSelectedTeam, setActiveTab }) {
     }
   }
 
+  if (error) {
+    return (
+      <div className="glass-panel p-8 text-center max-w-md mx-auto my-12 space-y-4">
+        <span className="text-3xl block">⚠️</span>
+        <h3 className="text-lg font-display text-white tracking-wider">FAILED TO CONNECT TO SERVER</h3>
+        <p className="text-xs text-[#7b93a8] leading-relaxed">
+          {error}
+        </p>
+        <button 
+          onClick={() => { setError(null); setLoading(true); fetchState(); }}
+          className="px-5 py-2 rounded-xl bg-[#00e87b] hover:bg-[#00d46f] text-[#050a0e] font-bold text-xs hover:shadow-[0_0_12px_rgba(0,232,123,0.2)] transition cursor-pointer"
+        >
+          Retry Connection
+        </button>
+      </div>
+    )
+  }
+
   if (loading && !tState) {
     return (
-      <div className="flex h-64 items-center justify-center">
+      <div className="flex h-64 flex-col items-center justify-center gap-3">
         <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-[#00e87b]/20 border-t-[#00e87b]"></div>
+        <span className="text-[10px] font-bold tracking-[0.2em] text-[#7b93a8] uppercase">Fetching Live Feed...</span>
+      </div>
+    )
+  }
+
+  if (!tState) {
+    return (
+      <div className="flex h-64 flex-col items-center justify-center gap-3">
+        <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-[#00e87b]/20 border-t-[#00e87b]"></div>
+        <span className="text-[10px] font-bold tracking-[0.2em] text-[#7b93a8] uppercase">Waiting for server response...</span>
       </div>
     )
   }
