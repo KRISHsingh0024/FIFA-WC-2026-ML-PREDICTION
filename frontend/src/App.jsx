@@ -314,6 +314,7 @@ export default function App() {
     { id: 'home', icon: <Home size={18} />, label: 'Home' },
     { id: 'dashboard', icon: <LayoutDashboard size={18} />, label: 'Groups & Overview' },
     { id: 'predictor', icon: <Flame size={18} />, label: 'Match Predictor', onActivate: () => { if (!prediction) runPrediction(predTeamA, predTeamB) } },
+    { id: 'live', icon: <Activity size={18} />, label: 'Live Match Center' },
     { id: 'teams', icon: <Users size={18} />, label: 'Rosters & Teams' },
     { id: 'simulator', icon: <Sliders size={18} />, label: 'Tournament Sim' },
     { id: 'arena', icon: <Target size={18} />, label: 'Arena Playground' },
@@ -515,6 +516,12 @@ export default function App() {
                   leaderboard={leaderboard}
                   leaderboardLoading={leaderboardLoading}
                   fetchLeaderboard={fetchLeaderboard}
+                />
+              )}
+              {activeTab === 'live' && (
+                <LiveView 
+                  setSelectedTeam={setSelectedTeam}
+                  setActiveTab={setActiveTab}
                 />
               )}
             </motion.div>
@@ -3350,3 +3357,593 @@ function ArenaView({ user, teams, setAuthModalOpen, leaderboard, leaderboardLoad
     </div>
   )
 }
+
+function LiveView({ setSelectedTeam, setActiveTab }) {
+  const [tState, setTState] = useState(null)
+  const [activeGroupTab, setActiveGroupTab] = useState('A')
+  const [loading, setLoading] = useState(true)
+  const [autoSimulating, setAutoSimulating] = useState(false)
+  const [selectedMatch, setSelectedMatch] = useState(null)
+  const [fixtureStageFilter, setFixtureStageFilter] = useState('all')
+
+  const fetchState = async () => {
+    try {
+      const res = await fetch('/api/live/state')
+      if (res.ok) {
+        const data = await res.json()
+        setTState(data)
+        if (data.status === 'group_stage' || data.status === 'not_started') {
+          const todayMatches = data.matches.filter(m => m.day === data.current_day && m.stage === 'group')
+          if (todayMatches.length > 0) {
+            setActiveGroupTab(todayMatches[0].group)
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching live tournament state:", err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchState()
+  }, [])
+
+  useEffect(() => {
+    let intervalId = null
+    if (autoSimulating && tState && tState.status !== 'finished') {
+      const todayMatches = tState.matches.filter(m => m.day === tState.current_day)
+      const hasLiveMatches = todayMatches.some(m => m.status === 'live')
+      
+      intervalId = setInterval(async () => {
+        if (!hasLiveMatches && todayMatches.some(m => m.status === 'scheduled')) {
+          const res = await fetch('/api/live/action', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'start_day' })
+          })
+          if (res.ok) {
+            const data = await res.json()
+            setTState(data.state)
+          }
+        } else {
+          const res = await fetch('/api/live/action', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'tick' })
+          })
+          if (res.ok) {
+            const data = await res.json()
+            setTState(data.state)
+            if (selectedMatch) {
+              const updatedMatch = data.state.matches.find(m => m.match_id === selectedMatch.match_id)
+              if (updatedMatch) setSelectedMatch(updatedMatch)
+            }
+          }
+        }
+      }, 1500)
+    }
+    return () => {
+      if (intervalId) clearInterval(intervalId)
+    }
+  }, [autoSimulating, tState, selectedMatch])
+
+  const handleAction = async (actionName) => {
+    try {
+      setLoading(true)
+      const res = await fetch('/api/live/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: actionName })
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setTState(data.state)
+        if (selectedMatch) {
+          const updatedMatch = data.state.matches.find(m => m.match_id === selectedMatch.match_id)
+          if (updatedMatch) setSelectedMatch(updatedMatch)
+        }
+      }
+    } catch (err) {
+      console.error(`Error running live action ${actionName}:`, err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading && !tState) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-[#00e87b]/20 border-t-[#00e87b]"></div>
+      </div>
+    )
+  }
+
+  const currentDay = tState.current_day
+  const todayMatches = tState.matches.filter(m => m.day === currentDay)
+  const isDayLive = todayMatches.some(m => m.status === 'live')
+  const isDayFinished = todayMatches.length > 0 && todayMatches.every(m => m.status === 'completed')
+  const groupLetters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"]
+
+  const filteredMatches = tState.matches.filter(m => {
+    if (fixtureStageFilter === 'group') return m.stage === 'group'
+    if (fixtureStageFilter === 'knockout') return m.stage !== 'group'
+    return true
+  })
+
+  const getStageLabel = (stage) => {
+    switch (stage) {
+      case 'group': return 'Group Stage'
+      case 'r32': return 'Round of 32'
+      case 'r16': return 'Round of 16'
+      case 'qf': return 'Quarter-finals'
+      case 'sf': return 'Semi-finals'
+      case 'third_place': return 'Third Place Playoff'
+      case 'final': return 'Grand Final'
+      default: return stage
+    }
+  }
+
+  return (
+    <div className="space-y-8 animate-fade-slide-up">
+      <div className="relative overflow-hidden rounded-2xl border border-white/[0.04] p-6 bg-gradient-to-br from-[#070d13] to-[#0a1520]">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+          <div>
+            <span className="inline-flex items-center gap-1.5 text-[9px] font-bold tracking-[0.2em] text-[#00e87b] uppercase bg-[#00e87b]/[0.06] border border-[#00e87b]/[0.12] px-3 py-1.5 rounded-full mb-3">
+              <Activity size={10} className="animate-pulse" />
+              Tournament Mode: {tState.status === 'not_started' ? 'Not Started' : tState.status === 'finished' ? 'Finished' : 'Live Broadcast'}
+            </span>
+            <h2 className="text-3xl font-display text-white leading-none tracking-wide">
+              {tState.status === 'finished' ? 'FIFA World Cup 2026 Concluded' : `TOURNAMENT DAY ${currentDay} / 30`}
+            </h2>
+            <p className="text-[#7b93a8] text-xs mt-1.5 leading-relaxed">
+              {tState.status === 'finished' 
+                ? 'Check out final standings and match results!' 
+                : currentDay <= 18 
+                  ? `Group Stage rounds matches. Current matches: Group ${todayMatches[0]?.group || 'A'} & ${todayMatches[2]?.group || 'B'}.`
+                  : `Knockout matches in progress. Stage: ${getStageLabel(todayMatches[0]?.stage)}.`}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button 
+              onClick={() => handleAction('reset')}
+              className="px-4 py-2 rounded-xl bg-white/[0.03] border border-white/[0.05] text-[#edf2f7] hover:text-white hover:bg-white/[0.06] transition text-[11px] font-semibold flex items-center gap-1.5 cursor-pointer"
+            >
+              Reset Campaign
+            </button>
+
+            {tState.status !== 'finished' && (
+              <>
+                <button 
+                  onClick={() => handleAction('start_day')}
+                  disabled={isDayLive || isDayFinished}
+                  className={`px-4 py-2 rounded-xl text-[11px] font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                    isDayLive || isDayFinished
+                      ? 'bg-white/[0.01] border border-white/[0.03] text-[#3f5669] cursor-not-allowed'
+                      : 'bg-[#00e87b]/10 border border-[#00e87b]/20 text-[#00e87b] hover:bg-[#00e87b]/20'
+                  }`}
+                >
+                  Start Matchday
+                </button>
+
+                <button 
+                  onClick={() => setAutoSimulating(!autoSimulating)}
+                  className={`px-4 py-2 rounded-xl text-[11px] font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                    autoSimulating
+                      ? 'bg-red-500/20 border border-red-500/35 text-red-400 hover:bg-red-500/30'
+                      : 'bg-[#00e87b] text-[#050a0e] hover:bg-[#00d46f] hover:shadow-[0_0_15px_rgba(0,232,123,0.2)]'
+                  }`}
+                >
+                  {autoSimulating ? 'Pause Auto-Tick' : 'Auto-Simulate Live'}
+                </button>
+
+                <button 
+                  onClick={() => handleAction('simulate_day_fast')}
+                  className="px-4 py-2 rounded-xl bg-white/[0.03] border border-white/[0.05] text-[#edf2f7] hover:text-white hover:bg-white/[0.06] transition text-[11px] font-semibold cursor-pointer"
+                >
+                  Sim Matchday (Fast)
+                </button>
+
+                <button 
+                  onClick={() => handleAction('simulate_tournament_fast')}
+                  className="px-4 py-2 rounded-xl bg-white/[0.03] border border-white/[0.05] text-[#edf2f7] hover:text-white hover:bg-white/[0.06] transition text-[11px] font-semibold cursor-pointer"
+                >
+                  Sim Tournament (Fast)
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="lg:col-span-8 space-y-6">
+          <div className="flex justify-between items-center">
+            <h3 className="font-display text-xl text-white tracking-wider flex items-center gap-2">
+              <Activity size={18} className="text-[#00e87b]" />
+              {tState.status === 'finished' ? 'FINAL RESULTS' : "TODAY'S FIXTURES"}
+            </h3>
+            <span className="text-[10px] text-[#3f5669] font-bold uppercase tracking-wider bg-white/[0.02] border border-white/[0.04] px-2 py-1 rounded">
+              Day {currentDay} matches
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {todayMatches.length > 0 ? (
+              todayMatches.map((m) => {
+                const isLive = m.status === 'live'
+                const isCompleted = m.status === 'completed'
+                const lastEvent = m.events && m.events.length > 0 
+                  ? [...m.events].reverse().find(e => e.minute <= m.minute && e.type !== 'start' && e.type !== 'end')
+                  : null
+
+                return (
+                  <div 
+                    key={m.match_id} 
+                    onClick={() => setSelectedMatch(m)}
+                    className={`glass-panel p-5 cursor-pointer relative overflow-hidden transition ${
+                      isLive ? 'border-[#00e87b]/25 shadow-[0_0_20px_rgba(0,232,123,0.04)] bg-[#00e87b]/[0.01]' : ''
+                    }`}
+                  >
+                    <div className="flex justify-between items-center mb-3.5">
+                      <span className="text-[9px] font-bold text-[#3f5669] uppercase tracking-wider">
+                        {m.stage === 'group' ? `Group ${m.group} Stage` : getStageLabel(m.stage)}
+                      </span>
+                      
+                      {isLive ? (
+                        <span className="inline-flex items-center gap-1 text-[9px] font-bold text-[#00e87b] bg-[#00e87b]/10 border border-[#00e87b]/25 px-2 py-0.5 rounded-full uppercase tracking-wide">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[#00e87b] animate-ping" />
+                          LIVE {m.minute}'
+                        </span>
+                      ) : isCompleted ? (
+                        <span className="inline-flex items-center text-[9px] font-bold text-[#7b93a8] bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 rounded uppercase tracking-wide">
+                          FT
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center text-[9px] font-medium text-[#3f5669] border border-white/[0.03] px-2 py-0.5 rounded">
+                          Scheduled: {m.time}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2.5 my-5">
+                      <div className="w-5/12 flex items-center justify-end gap-2 text-right">
+                        <span className="text-[13px] font-bold text-white truncate">{m.team_a}</span>
+                        {getFlagImg(m.team_a, "w-6.5 h-4.5 object-cover rounded shadow-xs shrink-0")}
+                      </div>
+
+                      <div className="w-2/12 flex items-center justify-center">
+                        <span className={`font-display text-2xl tracking-wide px-2.5 py-1 rounded bg-[#0b1620] border border-white/[0.04] ${
+                          isLive ? 'text-[#00e87b] text-green-glow' : 'text-white'
+                        }`}>
+                          {m.goals_a !== null ? m.goals_a : '–'} : {m.goals_b !== null ? m.goals_b : '–'}
+                        </span>
+                      </div>
+
+                      <div className="w-5/12 flex items-center justify-start gap-2 text-left">
+                        {getFlagImg(m.team_b, "w-6.5 h-4.5 object-cover rounded shadow-xs shrink-0")}
+                        <span className="text-[13px] font-bold text-white truncate">{m.team_b}</span>
+                      </div>
+                    </div>
+
+                    {isLive && lastEvent && (
+                      <div className="mt-3.5 p-2 rounded-lg bg-[#00e87b]/[0.03] border border-[#00e87b]/10 flex items-center gap-2 text-[11px] text-[#edf2f7] animate-fade-slide-up">
+                        <span className="text-[#00e87b] font-bold font-mono shrink-0">{lastEvent.minute}'</span>
+                        <span className="font-semibold shrink-0">
+                          {lastEvent.type === 'goal' ? '⚽ GOAL!' : '🟨 Card:'}
+                        </span>
+                        <span className="truncate text-[#7b93a8]">
+                          {lastEvent.player} ({lastEvent.team})
+                        </span>
+                      </div>
+                    )}
+
+                    {isCompleted && (
+                      <div className="mt-3.5 pt-3 border-t border-white/[0.03] text-center text-[10px] text-[#3f5669] truncate">
+                        🏟️ {m.stadium}
+                      </div>
+                    )}
+
+                    {!isLive && !isCompleted && (
+                      <div className="mt-3.5 pt-3 border-t border-white/[0.03] flex justify-between items-center text-[10px] text-[#3f5669]">
+                        <span>🏟️ {m.stadium.split(',')[0]}</span>
+                        <span>🗓️ {m.date}</span>
+                      </div>
+                    )}
+                  </div>
+                )
+              })
+            ) : (
+              <div className="col-span-2 text-center py-10 text-[#3f5669] text-sm">No matches scheduled for today. Click Reset to start.</div>
+            )}
+          </div>
+
+          <div className="glass-panel p-6 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.04] pb-4">
+              <h3 className="font-display text-lg text-white tracking-wider flex items-center gap-2">
+                <Calendar size={16} className="text-[#00e87b]" />
+                FULL FIXTURES CALENDAR
+              </h3>
+              
+              <div className="flex gap-1.5">
+                {['all', 'group', 'knockout'].map((filter) => (
+                  <button 
+                    key={filter} 
+                    onClick={() => setFixtureStageFilter(filter)}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition ${
+                      fixtureStageFilter === filter
+                        ? 'bg-[#00e87b]/10 border border-[#00e87b]/25 text-[#00e87b]'
+                        : 'bg-white/[0.02] text-[#7b93a8] border border-white/[0.03] hover:text-white'
+                    }`}
+                  >
+                    {filter}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
+              {filteredMatches.map((m) => (
+                <div 
+                  key={m.match_id}
+                  onClick={() => setSelectedMatch(m)}
+                  className={`flex items-center justify-between p-3 rounded-xl border transition hover:border-[#00e87b]/20 hover:bg-white/[0.01] cursor-pointer ${
+                    m.day === currentDay 
+                      ? 'border-[#00e87b]/20 bg-[#00e87b]/[0.02]' 
+                      : m.status === 'completed'
+                        ? 'border-white/[0.02] bg-white/[0.005]'
+                        : 'border-white/[0.04] bg-[#070e15]/40'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 w-1/4">
+                    <span className={`text-[9px] font-bold font-mono px-2 py-0.5 rounded shrink-0 ${
+                      m.day === currentDay 
+                        ? 'bg-[#00e87b]/20 text-[#00e87b]' 
+                        : m.status === 'completed' ? 'bg-[#3f5669]/15 text-[#3f5669]' : 'bg-white/[0.03] text-[#7b93a8]'
+                    }`}>
+                      DAY {m.day}
+                    </span>
+                    <span className="text-[10px] text-[#3f5669] uppercase font-bold hidden sm:inline">{m.time}</span>
+                  </div>
+
+                  <div className="flex items-center justify-center gap-2 w-2/4">
+                    <div className="flex items-center justify-end gap-1.5 w-5/12 text-right">
+                      <span className="text-[11px] font-medium text-[#edf2f7] truncate">{m.team_a}</span>
+                      {getFlagImg(m.team_a, "w-4.5 h-3 object-cover rounded-xs shrink-0")}
+                    </div>
+                    <span className="text-[11px] font-bold font-mono text-[#00e87b] bg-[#0b1620] px-2 py-0.5 border border-white/[0.03] rounded shrink-0">
+                      {m.goals_a !== null ? m.goals_a : '–'} : {m.goals_b !== null ? m.goals_b : '–'}
+                    </span>
+                    <div className="flex items-center justify-start gap-1.5 w-5/12 text-left">
+                      {getFlagImg(m.team_b, "w-4.5 h-3 object-cover rounded-xs shrink-0")}
+                      <span className="text-[11px] font-medium text-[#edf2f7] truncate">{m.team_b}</span>
+                    </div>
+                  </div>
+
+                  <div className="text-right w-1/4 text-[10px] text-[#3f5669] truncate">
+                    {m.status === 'live' ? (
+                      <span className="text-[#00e87b] font-bold animate-pulse">● LIVE</span>
+                    ) : m.status === 'completed' ? (
+                      'FT'
+                    ) : (
+                      m.stadium.split(',')[0]
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="lg:col-span-4 space-y-6">
+          <div className="flex justify-between items-center">
+            <h3 className="font-display text-xl text-white tracking-wider flex items-center gap-2">
+              <Trophy size={18} className="text-[#d4a54a]" />
+              STANDINGS LIVE
+            </h3>
+          </div>
+
+          <div className="glass-panel p-4 space-y-4">
+            <div className="grid grid-cols-6 gap-1 text-center">
+              {groupLetters.map((g) => (
+                <button
+                  key={g}
+                  onClick={() => setActiveGroupTab(g)}
+                  className={`py-1.5 rounded-lg text-[10px] font-bold transition cursor-pointer ${
+                    activeGroupTab === g
+                      ? 'bg-[#00e87b] text-[#050a0e] shadow-[0_0_10px_rgba(0,232,123,0.2)]'
+                      : 'bg-white/[0.02] border border-white/[0.04] text-[#7b93a8] hover:text-white'
+                  }`}
+                >
+                  {g}
+                </button>
+              ))}
+            </div>
+
+            <div className="overflow-hidden border border-white/[0.04] rounded-xl">
+              <table className="w-full text-left border-collapse text-[11px]">
+                <thead className="bg-white/[0.02] border-b border-white/[0.04] text-[#7b93a8] font-semibold">
+                  <tr>
+                    <th className="px-3 py-2 text-center w-8">#</th>
+                    <th className="px-2 py-2">Team</th>
+                    <th className="px-2 py-2 text-center w-7">P</th>
+                    <th className="px-2 py-2 text-center w-8">GD</th>
+                    <th className="px-3 py-2 text-right w-10">Pts</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/[0.03]">
+                  {tState.group_standings[activeGroupTab]?.map((row, idx) => {
+                    const isQualified = idx < 2
+                    return (
+                      <tr 
+                        key={row.team}
+                        className={`hover:bg-white/[0.01] transition ${
+                          isQualified ? 'bg-[#00e87b]/[0.01]' : ''
+                        }`}
+                      >
+                        <td className="px-3 py-2.5 text-center font-mono font-bold">
+                          <span className={`h-5 w-5 rounded flex items-center justify-center mx-auto ${
+                            idx === 0 ? 'bg-[#d4a54a]/15 text-[#d4a54a]' :
+                            idx === 1 ? 'bg-[#94a3b8]/10 text-[#94a3b8]' :
+                            'text-[#3f5669]'
+                          }`}>
+                            {idx + 1}
+                          </span>
+                        </td>
+                        <td className="px-2 py-2.5">
+                          <button
+                            onClick={() => { setSelectedTeam(row.team); setActiveTab('teams') }}
+                            className="flex items-center gap-1.5 text-left font-semibold text-white hover:text-[#00e87b] transition-colors truncate w-full"
+                          >
+                            {getFlagImg(row.team, "w-4.5 h-3 object-cover rounded-xs shrink-0")}
+                            <span className="truncate">{row.team}</span>
+                          </button>
+                        </td>
+                        <td className="px-2 py-2.5 text-center font-mono text-[#edf2f7]">{row.played}</td>
+                        <td className={`px-2 py-2.5 text-center font-mono font-semibold ${
+                          row.goal_diff > 0 ? 'text-emerald-400' : row.goal_diff < 0 ? 'text-red-400' : 'text-[#7b93a8]'
+                        }`}>
+                          {row.goal_diff > 0 ? `+${row.goal_diff}` : row.goal_diff}
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono font-bold text-[#00e87b] text-green-glow">{row.points}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="text-[10px] text-[#3f5669] leading-relaxed px-1 space-y-1">
+              <div className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-sm bg-[#00e87b]/20 inline-block border border-[#00e87b]/40" />
+                <span>Rows highlighted in green indicate current qualification positions (Top 2).</span>
+              </div>
+              <div>
+                Group results are calculated dynamically in real-time, matching official FIFA tiebreaking rules (points, goal difference, goals for).
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {selectedMatch && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 auth-backdrop">
+          <div className="glass-panel w-full max-w-lg bg-[#070d13] border border-white/[0.08] shadow-[0_16px_48px_rgba(0,0,0,0.8)] rounded-2xl overflow-hidden relative">
+            <div className="absolute inset-0 bg-radial-to-b from-white/[0.02] to-transparent pointer-events-none" />
+
+            <div className="p-5 border-b border-white/[0.05] flex justify-between items-center relative z-10">
+              <div>
+                <h4 className="font-display text-lg text-white leading-none tracking-wide">MATCH CENTRE</h4>
+                <span className="text-[9px] text-[#3f5669] uppercase font-bold tracking-wider mt-1 block">
+                  {selectedMatch.stage === 'group' ? `Group Stage - Group ${selectedMatch.group}` : getStageLabel(selectedMatch.stage)}
+                </span>
+              </div>
+              <button 
+                onClick={() => setSelectedMatch(null)}
+                className="text-[#3f5669] hover:text-white p-1 hover:bg-white/[0.04] rounded-lg transition pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6 text-center border-b border-white/[0.03] bg-[#0c1620]/30 relative z-10">
+              <div className="flex items-center justify-between gap-4">
+                <div className="w-5/12 text-center space-y-2">
+                  {getFlagImg(selectedMatch.team_a, "w-16 h-11 object-cover rounded-md shadow-md mx-auto")}
+                  <span className="block text-[14px] font-bold text-white leading-tight truncate">{selectedMatch.team_a}</span>
+                </div>
+
+                <div className="w-2/12 flex flex-col items-center justify-center gap-1.5 shrink-0">
+                  <span className="font-display text-3xl text-[#00e87b] text-green-glow">
+                    {selectedMatch.goals_a !== null ? selectedMatch.goals_a : '–'} : {selectedMatch.goals_b !== null ? selectedMatch.goals_b : '–'}
+                  </span>
+                  <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                    selectedMatch.status === 'live' ? 'bg-[#00e87b]/10 text-[#00e87b]' :
+                    selectedMatch.status === 'completed' ? 'bg-white/[0.04] text-[#7b93a8]' :
+                    'bg-white/[0.02] text-[#3f5669]'
+                  }`}>
+                    {selectedMatch.status === 'live' ? `Live ${selectedMatch.minute}'` : selectedMatch.status === 'completed' ? 'FT' : 'Scheduled'}
+                  </span>
+                </div>
+
+                <div className="w-5/12 text-center space-y-2">
+                  {getFlagImg(selectedMatch.team_b, "w-16 h-11 object-cover rounded-md shadow-md mx-auto")}
+                  <span className="block text-[14px] font-bold text-white leading-tight truncate">{selectedMatch.team_b}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 max-h-[300px] overflow-y-auto space-y-3.5 relative z-10">
+              <span className="text-[10px] font-bold text-[#3f5669] uppercase tracking-wider block">Live Feed Commentary</span>
+              
+              {selectedMatch.events && selectedMatch.events.length > 0 ? (
+                selectedMatch.events
+                  .filter(e => e.minute <= selectedMatch.minute)
+                  .map((e, idx) => {
+                    const isGoal = e.type === 'goal'
+                    const isCard = e.type === 'card'
+                    const isStart = e.type === 'start'
+                    const isEnd = e.type === 'end'
+
+                    return (
+                      <div 
+                        key={idx} 
+                        className={`flex items-start gap-3 p-3 rounded-xl border animate-fade-slide-up ${
+                          isGoal 
+                            ? 'bg-[#00e87b]/[0.03] border-[#00e87b]/10' 
+                            : isCard 
+                              ? 'bg-amber-500/[0.02] border-amber-500/10' 
+                              : 'bg-white/[0.015] border-white/[0.03]'
+                        }`}
+                      >
+                        <span className={`font-mono text-[11px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
+                          isGoal ? 'bg-[#00e87b]/20 text-[#00e87b]' :
+                          isCard ? 'bg-amber-500/20 text-amber-500' :
+                          'bg-white/[0.04] text-[#7b93a8]'
+                        }`}>
+                          {e.minute}'
+                        </span>
+
+                        <div className="text-[12px] flex-1">
+                          {isStart && (
+                            <span className="text-white font-semibold">🏁 Kickoff! The match between {selectedMatch.team_a} and {selectedMatch.team_b} has begun.</span>
+                          )}
+                          {isEnd && (
+                            <span className="text-white font-semibold">🏁 Full time whistle blows! The match has concluded.</span>
+                          )}
+                          {isGoal && (
+                            <div>
+                              <span className="text-[#00e87b] font-bold mr-1.5">⚽ GOAL!</span>
+                              <span className="text-white font-semibold">{e.player}</span>
+                              <span className="text-[#7b93a8] font-medium"> scores for {e.team}!</span>
+                            </div>
+                          )}
+                          {isCard && (
+                            <div>
+                              <span className="text-amber-500 font-bold mr-1.5">🟨 YELLOW CARD</span>
+                              <span className="text-white font-semibold">{e.player}</span>
+                              <span className="text-[#7b93a8]"> ({e.team}) is cautioned by the referee.</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })
+              ) : (
+                <div className="text-center py-6 text-[12px] text-[#3f5669]">Match events commentary will load once the match starts.</div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-white/[0.04] bg-[#050a0e] text-center text-[10px] text-[#3f5669] relative z-10 space-y-0.5">
+              <div>🏟️ {selectedMatch.stadium}</div>
+              <div>🗓️ {selectedMatch.date} · Kickoff {selectedMatch.time}</div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+

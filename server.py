@@ -19,7 +19,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import config
 from model.predict import MatchPredictor, predict_match
 from model.explain import explain_match_prediction
-from simulation.tournament import run_monte_carlo
+from simulation.tournament import run_monte_carlo, simulate_goals
 
 app = FastAPI(title="FIFA World Cup 2026 Predictor API", version="1.0.0")
 
@@ -640,6 +640,624 @@ def get_locked_predictions(email: str):
         return {"status": "not_found", "predictions": None}
         
     return {"status": "success", "predictions": user_preds}
+
+# ─── Live Tournament Playground API ──────────────────────────────────────────
+class LiveActionRequest(BaseModel):
+    action: str
+
+LIVE_TOURNAMENT_PATH = os.path.join(config.DATA_DIR, "live_tournament.json")
+
+def generate_group_stage_schedule():
+    import random
+    matches = []
+    group_letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"]
+    
+    stadiums = [
+        "MetLife Stadium, East Rutherford",
+        "SoFi Stadium, Los Angeles",
+        "AT&T Stadium, Dallas",
+        "Mercedes-Benz Stadium, Atlanta",
+        "NRG Stadium, Houston",
+        "Gillette Stadium, Boston",
+        "Lincoln Financial Field, Philadelphia",
+        "Lumen Field, Seattle",
+        "Levi's Stadium, San Francisco",
+        "Arrowhead Stadium, Kansas City",
+        "Hard Rock Stadium, Miami",
+        "BC Place, Vancouver",
+        "BMO Field, Toronto",
+        "Estadio Azteca, Mexico City",
+        "Estadio Akron, Guadalajara",
+        "Estadio BBVA, Monterrey"
+    ]
+    
+    match_id_counter = 1
+    
+    for round_num in range(1, 4):
+        for block in range(6):
+            day = (round_num - 1) * 6 + block + 1
+            g1_letter = group_letters[block * 2]
+            g2_letter = group_letters[block * 2 + 1]
+            
+            for g_letter in [g1_letter, g2_letter]:
+                teams = config.GROUPS[g_letter]
+                if round_num == 1:
+                    pairings = [(teams[0], teams[1]), (teams[2], teams[3])]
+                elif round_num == 2:
+                    pairings = [(teams[0], teams[2]), (teams[1], teams[3])]
+                else:
+                    pairings = [(teams[0], teams[3]), (teams[1], teams[2])]
+                    
+                for t1, t2 in pairings:
+                    stadium = stadiums[match_id_counter % len(stadiums)]
+                    time_str = "15:00" if len(matches) % 2 == 0 else "18:00"
+                    if len(matches) % 4 == 0:
+                        time_str = "12:00"
+                    elif len(matches) % 4 == 3:
+                        time_str = "21:00"
+                        
+                    matches.append({
+                        "match_id": f"M_{match_id_counter}",
+                        "stage": "group",
+                        "group": g_letter,
+                        "day": day,
+                        "team_a": t1,
+                        "team_b": t2,
+                        "goals_a": None,
+                        "goals_b": None,
+                        "winner": None,
+                        "status": "scheduled",
+                        "minute": 0,
+                        "events": [],
+                        "date": f"June {11 + day}, 2026",
+                        "time": time_str,
+                        "stadium": stadium
+                    })
+                    match_id_counter += 1
+    return matches
+
+def generate_match_events(team_a: str, team_b: str, goals_a: int, goals_b: int) -> list:
+    import random
+    events = []
+    
+    def get_roster_names(team_name):
+        if state.players_df is not None:
+            team_players = state.players_df[state.players_df["national_team"] == team_name]
+            if len(team_players) > 0:
+                roster = []
+                for _, row in team_players.iterrows():
+                    roster.append({
+                        "name": row["player_name"],
+                        "position": row["position"],
+                        "goals_p90": float(row["goals_p90"])
+                    })
+                return roster
+        return [
+            {"name": f"{team_name} Forward 9", "position": "FW", "goals_p90": 0.5},
+            {"name": f"{team_name} Forward 11", "position": "FW", "goals_p90": 0.4},
+            {"name": f"{team_name} Midfielder 10", "position": "MF", "goals_p90": 0.2},
+            {"name": f"{team_name} Midfielder 8", "position": "MF", "goals_p90": 0.15},
+            {"name": f"{team_name} Defender 4", "position": "DF", "goals_p90": 0.05},
+            {"name": f"{team_name} Defender 2", "position": "DF", "goals_p90": 0.02}
+        ]
+
+    roster_a = get_roster_names(team_a)
+    roster_b = get_roster_names(team_b)
+    
+    def select_scorer(roster):
+        non_gks = [p for p in roster if p["position"] != "GK"]
+        if not non_gks:
+            non_gks = roster
+        weights = []
+        for p in non_gks:
+            w = 0.1
+            if p["position"] == "FW":
+                w = 1.0 + p.get("goals_p90", 0.0) * 5.0
+            elif p["position"] == "MF":
+                w = 0.4 + p.get("goals_p90", 0.0) * 5.0
+            elif p["position"] == "DF":
+                w = 0.1 + p.get("goals_p90", 0.0) * 5.0
+            weights.append(max(0.01, w))
+        
+        chosen = random.choices(non_gks, weights=weights, k=1)[0]
+        return chosen["name"]
+
+    def select_card_receiver(roster):
+        weights = []
+        for p in roster:
+            w = 0.5
+            if p["position"] == "DF":
+                w = 1.5
+            elif p["position"] == "MF":
+                w = 1.0
+            elif p["position"] == "GK":
+                w = 0.1
+            weights.append(w)
+        chosen = random.choices(roster, weights=weights, k=1)[0]
+        return chosen["name"]
+
+    # Generate goal events
+    for _ in range(goals_a):
+        minute = random.randint(1, 90)
+        scorer = select_scorer(roster_a)
+        events.append({
+            "type": "goal",
+            "team": team_a,
+            "player": scorer,
+            "minute": minute
+        })
+        
+    for _ in range(goals_b):
+        minute = random.randint(1, 90)
+        scorer = select_scorer(roster_b)
+        events.append({
+            "type": "goal",
+            "team": team_b,
+            "player": scorer,
+            "minute": minute
+        })
+        
+    # Generate yellow cards
+    cards_a = random.randint(0, 3)
+    for _ in range(cards_a):
+        minute = random.randint(1, 90)
+        receiver = select_card_receiver(roster_a)
+        events.append({
+            "type": "card",
+            "card_type": "yellow",
+            "team": team_a,
+            "player": receiver,
+            "minute": minute
+        })
+        
+    cards_b = random.randint(0, 3)
+    for _ in range(cards_b):
+        minute = random.randint(1, 90)
+        receiver = select_card_receiver(roster_b)
+        events.append({
+            "type": "card",
+            "card_type": "yellow",
+            "team": team_b,
+            "player": receiver,
+            "minute": minute
+        })
+        
+    events = sorted(events, key=lambda e: e["minute"])
+    events.insert(0, {"type": "start", "minute": 0})
+    events.append({"type": "end", "minute": 90})
+    
+    return events
+
+def compute_live_group_standings(matches):
+    standings = {}
+    for g_letter, teams in config.GROUPS.items():
+        standings[g_letter] = {
+            t: {
+                "team": t,
+                "played": 0,
+                "wins": 0,
+                "draws": 0,
+                "losses": 0,
+                "goals_for": 0,
+                "goals_against": 0,
+                "goal_diff": 0,
+                "points": 0
+            }
+            for t in teams
+        }
+        
+    for m in matches:
+        if m["stage"] == "group" and m["status"] in ["live", "completed"]:
+            g = m["group"]
+            t1, t2 = m["team_a"], m["team_b"]
+            
+            ga = m["goals_a"] or 0
+            gb = m["goals_b"] or 0
+            
+            s1 = standings[g][t1]
+            s2 = standings[g][t2]
+            
+            s1["played"] += 1
+            s2["played"] += 1
+            s1["goals_for"] += ga
+            s1["goals_against"] += gb
+            s2["goals_for"] += gb
+            s2["goals_against"] += ga
+            
+            s1["goal_diff"] = s1["goals_for"] - s1["goals_against"]
+            s2["goal_diff"] = s2["goals_for"] - s2["goals_against"]
+            
+            if ga > gb:
+                s1["wins"] += 1
+                s1["points"] += 3
+                s2["losses"] += 1
+            elif ga == gb:
+                s1["draws"] += 1
+                s1["points"] += 1
+                s2["draws"] += 1
+                s2["points"] += 1
+            else:
+                s2["wins"] += 1
+                s2["points"] += 3
+                s1["losses"] += 1
+                
+    ranked_standings = {}
+    for g_letter, team_stats in standings.items():
+        sorted_teams = sorted(
+            team_stats.values(),
+            key=lambda x: (x["points"], x["goal_diff"], x["goals_for"]),
+            reverse=True
+        )
+        for idx, t_stat in enumerate(sorted_teams):
+            t_stat["position"] = idx + 1
+        ranked_standings[g_letter] = sorted_teams
+        
+    return ranked_standings
+
+def load_live_tournament():
+    if not os.path.exists(LIVE_TOURNAMENT_PATH):
+        return reset_live_tournament()
+    try:
+        with open(LIVE_TOURNAMENT_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Error loading live tournament: {e}")
+        return reset_live_tournament()
+
+def save_live_tournament(state_data):
+    try:
+        with open(LIVE_TOURNAMENT_PATH, "w", encoding="utf-8") as f:
+            json.dump(state_data, f, indent=4)
+    except Exception as e:
+        print(f"Error saving live tournament: {e}")
+
+def reset_live_tournament():
+    matches = generate_group_stage_schedule()
+    state_data = {
+        "current_day": 1,
+        "status": "not_started",
+        "matches": matches,
+        "group_standings": compute_live_group_standings(matches)
+    }
+    save_live_tournament(state_data)
+    return state_data
+
+def schedule_r32_matches(group_results):
+    from simulation.bracket import get_2026_bracket_pairings
+    pairings = get_2026_bracket_pairings(group_results)
+    
+    stadiums = [
+        "MetLife Stadium, East Rutherford",
+        "SoFi Stadium, Los Angeles",
+        "AT&T Stadium, Dallas",
+        "Mercedes-Benz Stadium, Atlanta",
+        "NRG Stadium, Houston",
+        "Gillette Stadium, Boston",
+        "Lincoln Financial Field, Philadelphia",
+        "Lumen Field, Seattle"
+    ]
+    
+    r32_matches = []
+    for idx, (t1, t2, mid) in enumerate(pairings):
+        day = 19 + (idx // 4)
+        stadium = stadiums[idx % len(stadiums)]
+        time_str = "15:00" if idx % 2 == 0 else "18:00"
+        if idx % 4 == 0:
+            time_str = "12:00"
+        elif idx % 4 == 3:
+            time_str = "21:00"
+            
+        r32_matches.append({
+            "match_id": f"R32_{idx + 1}",
+            "stage": "r32",
+            "day": day,
+            "team_a": t1,
+            "team_b": t2,
+            "goals_a": None,
+            "goals_b": None,
+            "winner": None,
+            "status": "scheduled",
+            "minute": 0,
+            "events": [],
+            "date": f"June {11 + day}, 2026",
+            "time": time_str,
+            "stadium": stadium
+        })
+    return r32_matches
+
+def schedule_knockout_round(winners, stage_name, start_day, matches_per_day, base_id):
+    stadiums = [
+        "MetLife Stadium, East Rutherford",
+        "SoFi Stadium, Los Angeles",
+        "AT&T Stadium, Dallas",
+        "Mercedes-Benz Stadium, Atlanta"
+    ]
+    
+    new_matches = []
+    num_matches = len(winners) // 2
+    for idx in range(num_matches):
+        t1 = winners[idx * 2]
+        t2 = winners[idx * 2 + 1]
+        
+        day = start_day + (idx // matches_per_day)
+        stadium = stadiums[idx % len(stadiums)]
+        time_str = "18:00" if idx % 2 == 0 else "21:00"
+        if idx % 4 == 0:
+            time_str = "15:00"
+            
+        new_matches.append({
+            "match_id": f"{base_id}_{idx + 1}",
+            "stage": stage_name,
+            "day": day,
+            "team_a": t1,
+            "team_b": t2,
+            "goals_a": None,
+            "goals_b": None,
+            "winner": None,
+            "status": "scheduled",
+            "minute": 0,
+            "events": [],
+            "date": f"July {day - 18}, 2026",
+            "time": time_str,
+            "stadium": stadium
+        })
+    return new_matches
+
+def check_and_advance_stage(t_state):
+    current_day = t_state["current_day"]
+    
+    if current_day == 18:
+        r32_matches = schedule_r32_matches(t_state["group_standings"])
+        t_state["matches"].extend(r32_matches)
+        t_state["current_day"] = 19
+        t_state["status"] = "knockouts"
+        
+    elif current_day == 22:
+        r32_matches_sorted = sorted(
+            [m for m in t_state["matches"] if m["stage"] == "r32"],
+            key=lambda x: int(x["match_id"].split("_")[1])
+        )
+        winners = [m["winner"] for m in r32_matches_sorted]
+        r16_matches = schedule_knockout_round(winners, "r16", start_day=23, matches_per_day=4, base_id="R16")
+        t_state["matches"].extend(r16_matches)
+        t_state["current_day"] = 23
+        
+    elif current_day == 24:
+        r16_matches_sorted = sorted(
+            [m for m in t_state["matches"] if m["stage"] == "r16"],
+            key=lambda x: int(x["match_id"].split("_")[1])
+        )
+        winners = [m["winner"] for m in r16_matches_sorted]
+        qf_matches = schedule_knockout_round(winners, "qf", start_day=25, matches_per_day=2, base_id="QF")
+        t_state["matches"].extend(qf_matches)
+        t_state["current_day"] = 25
+        
+    elif current_day == 26:
+        qf_matches_sorted = sorted(
+            [m for m in t_state["matches"] if m["stage"] == "qf"],
+            key=lambda x: int(x["match_id"].split("_")[1])
+        )
+        winners = [m["winner"] for m in qf_matches_sorted]
+        sf_matches = schedule_knockout_round(winners, "sf", start_day=27, matches_per_day=1, base_id="SF")
+        t_state["matches"].extend(sf_matches)
+        t_state["current_day"] = 27
+        
+    elif current_day == 28:
+        sf_matches_sorted = sorted(
+            [m for m in t_state["matches"] if m["stage"] == "sf"],
+            key=lambda x: int(x["match_id"].split("_")[1])
+        )
+        winners = [m["winner"] for m in sf_matches_sorted]
+        losers = []
+        for m in sf_matches_sorted:
+            loser = m["team_a"] if m["winner"] == m["team_b"] else m["team_b"]
+            losers.append(loser)
+            
+        third_place = {
+            "match_id": "3RD_PLACE",
+            "stage": "third_place",
+            "day": 29,
+            "team_a": losers[0],
+            "team_b": losers[1],
+            "goals_a": None,
+            "goals_b": None,
+            "winner": None,
+            "status": "scheduled",
+            "minute": 0,
+            "events": [],
+            "date": "July 11, 2026",
+            "time": "18:00",
+            "stadium": "Hard Rock Stadium, Miami"
+        }
+        final = {
+            "match_id": "FINAL",
+            "stage": "final",
+            "day": 30,
+            "team_a": winners[0],
+            "team_b": winners[1],
+            "goals_a": None,
+            "goals_b": None,
+            "winner": None,
+            "status": "scheduled",
+            "minute": 0,
+            "events": [],
+            "date": "July 12, 2026",
+            "time": "19:00",
+            "stadium": "MetLife Stadium, East Rutherford"
+        }
+        t_state["matches"].extend([third_place, final])
+        t_state["current_day"] = 29
+        
+    elif current_day == 29:
+        t_state["current_day"] = 30
+        
+    elif current_day == 30:
+        t_state["status"] = "finished"
+    else:
+        t_state["current_day"] += 1
+
+@app.get("/api/live/state")
+def get_live_state():
+    t_state = load_live_tournament()
+    return t_state
+
+@app.post("/api/live/action")
+def live_action(req: LiveActionRequest):
+    action = req.action.strip().lower()
+    t_state = load_live_tournament()
+    
+    if action == "reset":
+        t_state = reset_live_tournament()
+        return {"status": "success", "state": t_state}
+        
+    elif action == "start_day":
+        current_day = t_state["current_day"]
+        day_matches = [m for m in t_state["matches"] if m["day"] == current_day]
+        
+        if not day_matches:
+            if t_state["status"] == "finished":
+                raise HTTPException(status_code=400, detail="Tournament has already finished.")
+            t_state["current_day"] += 1
+            save_live_tournament(t_state)
+            return {"status": "success", "state": t_state}
+            
+        t_state["status"] = "group_stage" if current_day <= 18 else "knockouts"
+        
+        for m in t_state["matches"]:
+            if m["day"] == current_day:
+                m["status"] = "live"
+                m["minute"] = 0
+                
+                probs = predict_match(m["team_a"], m["team_b"])
+                probs["team_a"] = m["team_a"]
+                probs["team_b"] = m["team_b"]
+                stage_type = "group" if m["stage"] == "group" else "knockout"
+                
+                goals_a, goals_b, winner = simulate_goals(probs, stage=stage_type)
+                
+                m["events"] = generate_match_events(m["team_a"], m["team_b"], goals_a, goals_b)
+                m["goals_a"] = 0
+                m["goals_b"] = 0
+                m["winner"] = None
+                
+        save_live_tournament(t_state)
+        return {"status": "success", "state": t_state}
+        
+    elif action == "tick":
+        current_day = t_state["current_day"]
+        live_matches = [m for m in t_state["matches"] if m["day"] == current_day and m["status"] == "live"]
+        
+        if not live_matches:
+            return {"status": "no_active_matches", "state": t_state}
+            
+        day_complete = True
+        for m in t_state["matches"]:
+            if m["day"] == current_day and m["status"] == "live":
+                new_min = m["minute"] + 5
+                m["minute"] = min(90, new_min)
+                
+                goals_a = 0
+                goals_b = 0
+                for event in m["events"]:
+                    if event["type"] == "goal" and event["minute"] <= m["minute"]:
+                        if event["team"] == m["team_a"]:
+                            goals_a += 1
+                        else:
+                            goals_b += 1
+                
+                m["goals_a"] = goals_a
+                m["goals_b"] = goals_b
+                
+                if m["minute"] >= 90:
+                    m["status"] = "completed"
+                    if goals_a > goals_b:
+                        m["winner"] = m["team_a"]
+                    elif goals_b > goals_a:
+                        m["winner"] = m["team_b"]
+                    else:
+                        m["winner"] = "Draw"
+                else:
+                    day_complete = False
+                    
+        t_state["group_standings"] = compute_live_group_standings(t_state["matches"])
+        
+        if day_complete:
+            check_and_advance_stage(t_state)
+            
+        save_live_tournament(t_state)
+        return {"status": "success", "state": t_state}
+        
+    elif action == "simulate_day_fast":
+        current_day = t_state["current_day"]
+        day_matches = [m for m in t_state["matches"] if m["day"] == current_day]
+        
+        if not day_matches:
+            if t_state["status"] == "finished":
+                raise HTTPException(status_code=400, detail="Tournament has already finished.")
+            t_state["current_day"] += 1
+            save_live_tournament(t_state)
+            return {"status": "success", "state": t_state}
+            
+        t_state["status"] = "group_stage" if current_day <= 18 else "knockouts"
+        
+        for m in t_state["matches"]:
+            if m["day"] == current_day and m["status"] != "completed":
+                probs = predict_match(m["team_a"], m["team_b"])
+                probs["team_a"] = m["team_a"]
+                probs["team_b"] = m["team_b"]
+                stage_type = "group" if m["stage"] == "group" else "knockout"
+                
+                goals_a, goals_b, winner = simulate_goals(probs, stage=stage_type)
+                
+                m["events"] = generate_match_events(m["team_a"], m["team_b"], goals_a, goals_b)
+                m["goals_a"] = goals_a
+                m["goals_b"] = goals_b
+                m["winner"] = winner
+                m["minute"] = 90
+                m["status"] = "completed"
+                
+        t_state["group_standings"] = compute_live_group_standings(t_state["matches"])
+        check_and_advance_stage(t_state)
+        save_live_tournament(t_state)
+        return {"status": "success", "state": t_state}
+        
+    elif action == "simulate_tournament_fast":
+        if t_state["status"] == "finished":
+            raise HTTPException(status_code=400, detail="Tournament has already finished.")
+            
+        while t_state["status"] != "finished":
+            current_day = t_state["current_day"]
+            day_matches = [m for m in t_state["matches"] if m["day"] == current_day]
+            
+            if not day_matches:
+                t_state["current_day"] += 1
+                if t_state["current_day"] > 35:
+                    t_state["status"] = "finished"
+                continue
+                
+            t_state["status"] = "group_stage" if current_day <= 18 else "knockouts"
+            
+            for m in t_state["matches"]:
+                if m["day"] == current_day and m["status"] != "completed":
+                    probs = predict_match(m["team_a"], m["team_b"])
+                    probs["team_a"] = m["team_a"]
+                    probs["team_b"] = m["team_b"]
+                    stage_type = "group" if m["stage"] == "group" else "knockout"
+                    
+                    goals_a, goals_b, winner = simulate_goals(probs, stage=stage_type)
+                    
+                    m["events"] = generate_match_events(m["team_a"], m["team_b"], goals_a, goals_b)
+                    m["goals_a"] = goals_a
+                    m["goals_b"] = goals_b
+                    m["winner"] = winner
+                    m["minute"] = 90
+                    m["status"] = "completed"
+                    
+            t_state["group_standings"] = compute_live_group_standings(t_state["matches"])
+            check_and_advance_stage(t_state)
+            
+        save_live_tournament(t_state)
+        return {"status": "success", "state": t_state}
 
 # ─── Helper Functions ─────────────────────────────────────────────────────────
 def get_confederation(team_name: str) -> str:
