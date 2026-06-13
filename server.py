@@ -1311,8 +1311,19 @@ def fetch_live_scores_from_api(force: bool = False):
         mtime = os.path.getmtime(real_results_path)
         import time
         age = time.time() - mtime
-        if age < 300: # 5 minutes cache
-            print(f"Using cached real results ({int(age)}s old).")
+        
+        # Dynamic cache duration: 60 seconds if live matches exist, otherwise 300 seconds (5 minutes)
+        cache_duration = 300
+        try:
+            with open(real_results_path, "r", encoding="utf-8") as f:
+                cached_data = json.load(f)
+                if any(m.get("status") == "live" for m in cached_data):
+                    cache_duration = 60
+        except Exception:
+            pass
+            
+        if age < cache_duration:
+            print(f"Using cached real results ({int(age)}s old, cache_duration={cache_duration}s).")
             try:
                 with open(real_results_path, "r", encoding="utf-8") as f:
                     import datetime

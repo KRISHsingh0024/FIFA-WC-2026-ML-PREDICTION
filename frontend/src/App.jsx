@@ -3379,6 +3379,12 @@ function LiveView({ setSelectedTeam, setActiveTab }) {
   const [configError, setConfigError] = useState(null)
   const [configSuccess, setConfigSuccess] = useState(false)
 
+  const isAdmin = typeof window !== 'undefined' && (
+    window.location.hostname === 'localhost' || 
+    window.location.hostname === '127.0.0.1' || 
+    window.location.search.includes('admin=true')
+  )
+
   const fetchState = async () => {
     try {
       setError(null)
@@ -3460,6 +3466,11 @@ function LiveView({ setSelectedTeam, setActiveTab }) {
   useEffect(() => {
     if (subTab === 'real') {
       fetchComparison()
+      // Setup auto-update interval of 30 seconds
+      const intervalId = setInterval(() => {
+        fetchComparison()
+      }, 30000)
+      return () => clearInterval(intervalId)
     }
   }, [subTab])
 
@@ -3747,23 +3758,25 @@ function LiveView({ setSelectedTeam, setActiveTab }) {
                   Sync Feed
                 </button>
               )}
-              <button
-                onClick={() => {
-                  setShowConfigPanel(!showConfigPanel);
-                  setConfigError(null);
-                  setConfigSuccess(false);
-                }}
-                className="px-3.5 py-1.5 rounded-lg bg-[#00e87b]/10 border border-[#00e87b]/25 hover:bg-[#00e87b]/20 text-[#00e87b] transition text-[11px] font-bold flex items-center gap-1.5 cursor-pointer"
-              >
-                <Settings size={11} />
-                {apiConfigured ? "Update API Key" : "Configure API Connection"}
-              </button>
+              {isAdmin && (
+                <button
+                  onClick={() => {
+                    setShowConfigPanel(!showConfigPanel);
+                    setConfigError(null);
+                    setConfigSuccess(false);
+                  }}
+                  className="px-3.5 py-1.5 rounded-lg bg-[#00e87b]/10 border border-[#00e87b]/25 hover:bg-[#00e87b]/20 text-[#00e87b] transition text-[11px] font-bold flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Settings size={11} />
+                  {apiConfigured ? "Update API Key" : "Configure API Connection"}
+                </button>
+              )}
             </div>
           </div>
 
           {/* Settings Panel */}
           <AnimatePresence>
-            {showConfigPanel && (
+            {isAdmin && showConfigPanel && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
@@ -3860,7 +3873,13 @@ function LiveView({ setSelectedTeam, setActiveTab }) {
                   <div key={m.match_id} className="glass-panel p-6 space-y-5 relative overflow-hidden border border-white/[0.04] bg-[#0c1620]/25">
                     <div className="flex justify-between items-center text-[10px] text-[#3f5669] font-bold uppercase tracking-wider">
                       <span>{m.date} fixture</span>
-                      <span className="text-[#edf2f7] bg-white/[0.03] border border-white/[0.04] px-2 py-0.5 rounded">FT</span>
+                      <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
+                        m.status === 'completed' ? 'text-[#edf2f7] bg-white/[0.03] border border-white/[0.04]' :
+                        m.status === 'live' ? 'text-[#00e87b] bg-[#00e87b]/10 border border-[#00e87b]/25 animate-pulse shadow-[0_0_8px_rgba(0,232,123,0.15)]' :
+                        'text-[#7b93a8] bg-white/[0.01] border border-white/[0.03] opacity-60'
+                      }`}>
+                        {m.status === 'completed' ? 'FT' : m.status === 'live' ? 'LIVE' : 'Scheduled'}
+                      </span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 divide-x divide-white/[0.04]">
@@ -3872,7 +3891,9 @@ function LiveView({ setSelectedTeam, setActiveTab }) {
                             {getFlagImg(m.team_a, "w-7 h-5 object-cover rounded shadow-xs mb-1.5")}
                             <span className="text-[11px] font-bold text-white truncate max-w-[80px]">{m.team_a}</span>
                           </div>
-                          <span className="w-2/12 font-display text-2xl text-[#edf2f7]">{m.real_goals_a} : {m.real_goals_b}</span>
+                          <span className="w-2/12 font-display text-2xl text-[#edf2f7]">
+                            {m.status === 'scheduled' ? 'vs' : `${m.real_goals_a} : ${m.real_goals_b}`}
+                          </span>
                           <div className="w-5/12 flex flex-col items-center">
                             {getFlagImg(m.team_b, "w-7 h-5 object-cover rounded shadow-xs mb-1.5")}
                             <span className="text-[11px] font-bold text-white truncate max-w-[80px]">{m.team_b}</span>
@@ -3912,7 +3933,11 @@ function LiveView({ setSelectedTeam, setActiveTab }) {
                     </div>
 
                     <div className="pt-1 text-center">
-                      {isExactScore ? (
+                      {m.status === 'scheduled' ? (
+                        <div className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#7b93a8] bg-white/[0.01] border border-white/[0.03] px-3 py-1.5 rounded-full">
+                          ⏳ Yet to be announced
+                        </div>
+                      ) : isExactScore ? (
                         <div className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-3 py-1.5 rounded-full shadow-[0_0_12px_rgba(16,185,129,0.15)]">
                           🔥 EXACT SCORE MATCHED ({m.real_goals_a} - {m.real_goals_b})
                         </div>
