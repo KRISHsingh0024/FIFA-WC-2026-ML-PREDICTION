@@ -3742,7 +3742,7 @@ function LiveView({ setSelectedTeam, setActiveTab }) {
                 <span className="text-[10px] text-[#7b93a8] block mt-0.5">
                   {apiConfigured 
                     ? `Data synced via RapidAPI. Last updated: ${lastUpdated || 'Just now'}`
-                    : "Using offline tournament datasets. Enter API Key to fetch real-world scores."}
+                    : "Using offline tournament datasets. Sync status inactive."}
                 </span>
               </div>
             </div>
@@ -3758,97 +3758,8 @@ function LiveView({ setSelectedTeam, setActiveTab }) {
                   Sync Feed
                 </button>
               )}
-              {isAdmin && (
-                <button
-                  onClick={() => {
-                    setShowConfigPanel(!showConfigPanel);
-                    setConfigError(null);
-                    setConfigSuccess(false);
-                  }}
-                  className="px-3.5 py-1.5 rounded-lg bg-[#00e87b]/10 border border-[#00e87b]/25 hover:bg-[#00e87b]/20 text-[#00e87b] transition text-[11px] font-bold flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Settings size={11} />
-                  {apiConfigured ? "Update API Key" : "Configure API Connection"}
-                </button>
-              )}
             </div>
           </div>
-
-          {/* Settings Panel */}
-          <AnimatePresence>
-            {isAdmin && showConfigPanel && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.25, ease: "easeInOut" }}
-                className="overflow-hidden"
-              >
-                <div className="glass-panel p-5 border border-white/[0.05] bg-[#070e15] rounded-xl space-y-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-white">RapidAPI Integration Settings</h4>
-                      <p className="text-[10px] text-[#7b93a8] mt-0.5">Configure credentials for free-api-live-football-data API.</p>
-                    </div>
-                    <button
-                      onClick={() => setShowConfigPanel(false)}
-                      className="text-[#3f5669] hover:text-white text-xs p-1"
-                    >
-                      ✕
-                    </button>
-                  </div>
-
-                  <form onSubmit={handleSaveConfig} className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-end">
-                    <div className="sm:col-span-8 space-y-1.5">
-                      <label className="text-[9px] font-bold text-[#7b93a8] uppercase tracking-wider block font-sans">RapidAPI Access Key (x-rapidapi-key)</label>
-                      <input
-                        type="password"
-                        placeholder="Paste your RapidAPI Key here..."
-                        value={apiKeyInput}
-                        onChange={(e) => setApiKeyInput(e.target.value)}
-                        className="w-full h-10 px-3.5 rounded-lg bg-[#0c1620] border border-white/[0.06] text-white text-[12px] placeholder:text-[#3f5669] focus:outline-none focus:border-[#00e87b]/30"
-                      />
-                    </div>
-                    <div className="sm:col-span-4 flex gap-2">
-                      <button
-                        type="submit"
-                        disabled={configSaving}
-                        className="flex-1 h-10 rounded-lg bg-[#00e87b] hover:bg-[#00d46f] disabled:opacity-40 text-[#050a0e] font-bold text-[11px] tracking-wide flex items-center justify-center gap-1.5 transition cursor-pointer"
-                      >
-                        {configSaving ? (
-                          <>
-                            <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#050a0e] border-t-transparent"></div>
-                            Verifying...
-                          </>
-                        ) : (
-                          "Save & Connect"
-                        )}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowConfigPanel(false)}
-                        className="h-10 px-4 rounded-lg bg-white/[0.02] border border-white/[0.04] text-[#7b93a8] hover:text-white transition text-[11px] font-semibold cursor-pointer"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
-
-                  {configError && (
-                    <div className="text-[10px] text-red-400 font-semibold bg-red-500/5 border border-red-500/15 p-2.5 rounded-lg">
-                      ⚠️ {configError}
-                    </div>
-                  )}
-
-                  {configSuccess && (
-                    <div className="text-[10px] text-[#00e87b] font-semibold bg-[#00e87b]/5 border border-[#00e87b]/15 p-2.5 rounded-lg">
-                      ✓ Connection verified successfully! Live scores synced.
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
 
           {compLoading ? (
             <div className="flex h-64 items-center justify-center">

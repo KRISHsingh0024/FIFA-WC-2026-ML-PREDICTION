@@ -1295,6 +1295,11 @@ def fetch_live_scores_from_api(force: bool = False):
         api_key = os.getenv("RAPIDAPI_KEY", "").strip()
         provider = "rapidapi"
         
+    # Default hardcoded fallback key so it works out-of-the-box
+    if not api_key:
+        api_key = "ffec02eb77msh068419f66cfcc0dp1ef84bjsndb51922e5a21"
+        provider = "rapidapi"
+        
     # If still no key, load/return offline local data
     if not api_key:
         print("No API Key configured. Using offline mock data.")
@@ -1458,10 +1463,8 @@ def get_live_api_config():
     api_config = load_api_config()
     key = api_config.get("api_key", "").strip()
     
-    # Check env if file config empty
-    has_key = bool(key)
-    if not has_key:
-        has_key = bool(os.getenv("RAPIDAPI_KEY"))
+    # Check env if file config empty, default to True since fallback key is hardcoded
+    has_key = bool(key) or bool(os.getenv("RAPIDAPI_KEY")) or True
         
     return {
         "configured": has_key,
@@ -1534,7 +1537,7 @@ def get_real_comparison(force: bool = False):
         })
         
     api_config = load_api_config()
-    api_configured = bool(api_config.get("api_key", "").strip() or os.getenv("RAPIDAPI_KEY"))
+    api_configured = bool(api_config.get("api_key", "").strip() or os.getenv("RAPIDAPI_KEY") or True)
     provider = api_config.get("provider", "rapidapi")
     
     return {
