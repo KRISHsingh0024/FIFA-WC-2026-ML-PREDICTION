@@ -28,3 +28,7 @@ downloaded_files/
 # OS specific files
 .DS_Store
 Thumbs.db
+
+# API Configurations & Cache
+data/api_config.json
+data/real_results.json

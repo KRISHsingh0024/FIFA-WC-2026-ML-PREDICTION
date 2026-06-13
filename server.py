@@ -127,6 +127,10 @@ class LockPredictionsRequest(BaseModel):
     email: str
     predictions: dict
 
+class ApiKeyConfigRequest(BaseModel):
+    provider: str
+    api_key: str
+
 # ─── API Endpoints ────────────────────────────────────────────────────────────
 @app.get("/api/config")
 def get_config():
@@ -1259,58 +1263,236 @@ def live_action(req: LiveActionRequest):
         save_live_tournament(t_state)
         return {"status": "success", "state": t_state}
 
-@app.get("/api/live/real_comparison")
-def get_real_comparison():
+# ─── Live Scores API Configuration & Caching ──────────────────────────────────
+API_CONFIG_PATH = os.path.join(config.DATA_DIR, "api_config.json")
+
+def load_api_config():
+    if os.path.exists(API_CONFIG_PATH):
+        try:
+            with open(API_CONFIG_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error loading API config: {e}")
+    return {"provider": "rapidapi", "api_key": ""}
+
+def save_api_config(config_data):
+    try:
+        with open(API_CONFIG_PATH, "w", encoding="utf-8") as f:
+            json.dump(config_data, f, indent=4)
+    except Exception as e:
+        print(f"Error saving API config: {e}")
+
+def fetch_live_scores_from_api(force: bool = False):
     real_results_path = os.path.join(config.DATA_DIR, "real_results.json")
     
-    if not os.path.exists(real_results_path):
-        initial_data = [
-            {
-                "match_id": "R_1",
-                "date": "June 11, 2026",
-                "team_a": "Mexico",
-                "team_b": "South Africa",
-                "real_goals_a": 2,
-                "real_goals_b": 0,
-                "status": "completed"
-            },
-            {
-                "match_id": "R_2",
-                "date": "June 12, 2026",
-                "team_a": "Canada",
-                "team_b": "Bosnia and Herzegovina",
-                "real_goals_a": 1,
-                "real_goals_b": 1,
-                "status": "completed"
-            },
-            {
-                "match_id": "R_3",
-                "date": "June 12, 2026",
-                "team_a": "United States",
-                "team_b": "Paraguay",
-                "real_goals_a": 2,
-                "real_goals_b": 1,
-                "status": "completed"
-            },
-            {
-                "match_id": "R_4",
-                "date": "June 12, 2026",
-                "team_a": "South Korea",
-                "team_b": "Czechia",
-                "real_goals_a": 0,
-                "real_goals_b": 0,
-                "status": "completed"
-            }
-        ]
-        with open(real_results_path, "w", encoding="utf-8") as f:
-            json.dump(initial_data, f, indent=4)
+    # 1. Load config
+    api_config = load_api_config()
+    provider = api_config.get("provider", "rapidapi")
+    api_key = api_config.get("api_key", "").strip()
+    
+    # Fallback to env
+    if not api_key:
+        api_key = os.getenv("RAPIDAPI_KEY", "").strip()
+        provider = "rapidapi"
+        
+    # If still no key, load/return offline local data
+    if not api_key:
+        print("No API Key configured. Using offline mock data.")
+        if os.path.exists(real_results_path):
+            try:
+                with open(real_results_path, "r", encoding="utf-8") as f:
+                    return json.load(f), False, "Offline Fallback"
+            except Exception as e:
+                print(f"Error reading offline mock data: {e}")
+        return [], False, None
+        
+    # Check cache age unless forced
+    if not force and os.path.exists(real_results_path):
+        mtime = os.path.getmtime(real_results_path)
+        import time
+        age = time.time() - mtime
+        if age < 300: # 5 minutes cache
+            print(f"Using cached real results ({int(age)}s old).")
+            try:
+                with open(real_results_path, "r", encoding="utf-8") as f:
+                    import datetime
+                    last_updated_str = datetime.datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M:%S")
+                    return json.load(f), True, last_updated_str
+            except Exception as e:
+                print(f"Error reading cache, will re-fetch: {e}")
+                
+    # Fetch matches from API day-by-day
+    import requests
+    import datetime
+    
+    # Start date is June 11, 2026 (20260611)
+    start_date = datetime.date(2026, 6, 11)
+    today = datetime.date.today()
+    # End date is today + 1 day (to capture tomorrow's fixtures)
+    end_date = today + datetime.timedelta(days=1)
+    
+    # Limit range to ensure we don't make too many calls if date is far in the future
+    if end_date < start_date:
+        end_date = start_date + datetime.timedelta(days=2)
+    elif (end_date - start_date).days > 35: # World Cup is roughly 30 days
+        end_date = start_date + datetime.timedelta(days=35)
+        
+    url = "https://free-api-live-football-data.p.rapidapi.com/football-get-matches-by-date"
+    headers = {
+        "x-rapidapi-key": api_key,
+        "x-rapidapi-host": "free-api-live-football-data.p.rapidapi.com"
+    }
+    
+    TEAM_NAME_MAPPING = {
+        "USA": "United States",
+        "Korea Republic": "South Korea",
+        "Czech Republic": "Czechia",
+        "Cote d'Ivoire": "Ivory Coast",
+        "Congo DR": "DR Congo",
+        "Bosnia & Herzegovina": "Bosnia and Herzegovina",
+        "Bosnia-Herzegovina": "Bosnia and Herzegovina",
+    }
+    
+    all_wc_teams = set(config.ALL_TEAMS)
+    parsed_matches = []
+    
+    curr_date = start_date
+    delta = datetime.timedelta(days=1)
+    
+    print(f"Syncing live scores from {start_date} to {end_date}...")
+    
+    while curr_date <= end_date:
+        date_str = curr_date.strftime("%Y%m%d") # "YYYYMMDD" format
+        params = {"date": date_str}
+        
+        try:
+            res = requests.get(url, headers=headers, params=params, timeout=8)
+            if res.status_code == 200:
+                data = res.json()
+                matches = data.get("response", {}).get("matches", [])
+                for m in matches:
+                    home_raw = m.get("home", {}).get("name")
+                    away_raw = m.get("away", {}).get("name")
+                    
+                    home_mapped = TEAM_NAME_MAPPING.get(home_raw, home_raw)
+                    away_mapped = TEAM_NAME_MAPPING.get(away_raw, away_raw)
+                    
+                    if home_mapped in all_wc_teams and away_mapped in all_wc_teams:
+                        time_str = m.get("time", "")
+                        formatted_date = curr_date.strftime("%B %d, %Y")
+                        if time_str:
+                            try:
+                                date_part = time_str.split(" ")[0]
+                                dt_parsed = datetime.datetime.strptime(date_part, "%d.%m.%Y")
+                                formatted_date = dt_parsed.strftime("%B %d, %Y")
+                            except Exception:
+                                pass
+                                
+                        status_info = m.get("status", {})
+                        is_finished = status_info.get("finished", False)
+                        is_started = status_info.get("started", False)
+                        
+                        status = "scheduled"
+                        if is_finished:
+                            status = "completed"
+                        elif is_started:
+                            status = "live"
+                            
+                        real_goals_a = m.get("home", {}).get("score")
+                        real_goals_b = m.get("away", {}).get("score")
+                        
+                        if real_goals_a is None and (is_finished or is_started):
+                            real_goals_a = 0
+                        if real_goals_b is None and (is_finished or is_started):
+                            real_goals_b = 0
+                            
+                        parsed_matches.append({
+                            "match_id": f"R_{m.get('id')}",
+                            "date": formatted_date,
+                            "team_a": home_mapped,
+                            "team_b": away_mapped,
+                            "real_goals_a": real_goals_a,
+                            "real_goals_b": real_goals_b,
+                            "status": status
+                        })
+            else:
+                print(f"API returned status {res.status_code} for date {date_str}")
+        except Exception as e:
+            print(f"Error fetching matches for date {date_str}: {e}")
             
-    try:
-        with open(real_results_path, "r", encoding="utf-8") as f:
-            matches = json.load(f)
-    except Exception as e:
-        print(f"Error loading real results: {e}")
-        return {"error": str(e)}
+        curr_date += delta
+        
+    if parsed_matches:
+        try:
+            with open(real_results_path, "w", encoding="utf-8") as f:
+                json.dump(parsed_matches, f, indent=4)
+        except Exception as e:
+            print(f"Error writing to cache file: {e}")
+            
+        last_updated_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        return parsed_matches, True, last_updated_str
+    else:
+        if os.path.exists(real_results_path):
+            try:
+                with open(real_results_path, "r", encoding="utf-8") as f:
+                    mtime = os.path.getmtime(real_results_path)
+                    last_updated_str = datetime.datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M:%S")
+                    return json.load(f), True, last_updated_str + " (Fallback)"
+            except Exception as e:
+                print(f"Error reading cached file on sync failure: {e}")
+        return [], False, "No data available"
+
+@app.get("/api/live/config")
+def get_live_api_config():
+    api_config = load_api_config()
+    key = api_config.get("api_key", "").strip()
+    
+    # Check env if file config empty
+    has_key = bool(key)
+    if not has_key:
+        has_key = bool(os.getenv("RAPIDAPI_KEY"))
+        
+    return {
+        "configured": has_key,
+        "provider": api_config.get("provider", "rapidapi")
+    }
+
+@app.post("/api/live/config")
+def post_live_api_config(req: ApiKeyConfigRequest):
+    provider = req.provider.strip().lower()
+    api_key = req.api_key.strip()
+    
+    if provider != "rapidapi":
+        raise HTTPException(status_code=400, detail="Invalid API provider. Only 'rapidapi' is supported.")
+    if not api_key:
+        raise HTTPException(status_code=400, detail="API key cannot be empty.")
+        
+    # Save key
+    save_api_config({"provider": provider, "api_key": api_key})
+    
+    # Try an immediate sync
+    matches, is_live, last_updated = fetch_live_scores_from_api(force=True)
+    if not is_live:
+        raise HTTPException(status_code=400, detail=f"API Connection verified but fetch failed: {last_updated}")
+        
+    return {
+        "status": "success",
+        "message": "API Key saved and synced successfully.",
+        "last_updated": last_updated,
+        "matches_count": len(matches)
+    }
+
+@app.get("/api/live/real_comparison")
+def get_real_comparison(force: bool = False):
+    matches, is_live, last_updated = fetch_live_scores_from_api(force=force)
+    
+    if not matches:
+        return {
+            "comparison": [],
+            "is_live": is_live,
+            "last_updated": last_updated or "Never",
+            "api_configured": False
+        }
         
     comparison = []
     for m in matches:
@@ -1340,7 +1522,17 @@ def get_real_comparison():
             }
         })
         
-    return {"comparison": comparison}
+    api_config = load_api_config()
+    api_configured = bool(api_config.get("api_key", "").strip() or os.getenv("RAPIDAPI_KEY"))
+    provider = api_config.get("provider", "rapidapi")
+    
+    return {
+        "comparison": comparison,
+        "is_live": is_live,
+        "last_updated": last_updated,
+        "api_configured": api_configured,
+        "provider": provider
+    }
 
 # ─── Helper Functions ─────────────────────────────────────────────────────────
 def get_confederation(team_name: str) -> str:
