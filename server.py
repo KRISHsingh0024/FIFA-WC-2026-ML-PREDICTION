@@ -1345,8 +1345,8 @@ def fetch_live_scores_from_api(force: bool = False):
     # Limit range to ensure we don't make too many calls if date is far in the future
     if end_date < start_date:
         end_date = start_date + datetime.timedelta(days=2)
-    elif (end_date - start_date).days > 35: # World Cup is roughly 30 days
-        end_date = start_date + datetime.timedelta(days=35)
+    elif (end_date - start_date).days > 45: # World Cup is 39 days (June 11 - July 19)
+        end_date = start_date + datetime.timedelta(days=45)
         
     url = "https://free-api-live-football-data.p.rapidapi.com/football-get-matches-by-date"
     headers = {
