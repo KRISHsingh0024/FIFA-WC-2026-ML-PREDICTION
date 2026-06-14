@@ -172,6 +172,7 @@ export default function App() {
   const [teamDetail, setTeamDetail] = useState(null)
   const [simResults, setSimResults] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [showWakeupMessage, setShowWakeupMessage] = useState(false)
   const [simulating, setSimulating] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   
@@ -205,20 +206,18 @@ export default function App() {
     }
   }, [])
 
-  // 1. Initial load
+  // 1. Initial load (Optimized to fetch in parallel)
   useEffect(() => {
     async function init() {
       try {
         setLoading(true)
-        const teamsRes = await fetch('/api/teams')
-        const teamsData = await teamsRes.json()
+        const [teamsData, simData] = await Promise.all([
+          fetch('/api/teams').then(res => res.json()),
+          fetch('/api/simulate').then(res => res.json()),
+          fetchLeaderboard()
+        ])
         setTeams(teamsData.teams)
-
-        const simRes = await fetch('/api/simulate')
-        const simData = await simRes.json()
         setSimResults(simData)
-        
-        await fetchLeaderboard()
       } catch (err) {
         console.error("Initialization error:", err)
       } finally {
@@ -227,6 +226,18 @@ export default function App() {
     }
     init()
   }, [fetchLeaderboard])
+
+  // Timer for Render free-tier cold start message
+  useEffect(() => {
+    if (loading) {
+      const timer = setTimeout(() => {
+        setShowWakeupMessage(true)
+      }, 3000)
+      return () => clearTimeout(timer)
+    } else {
+      setShowWakeupMessage(false)
+    }
+  }, [loading])
 
   // 2. Fetch team detail
   useEffect(() => {
@@ -296,13 +307,22 @@ export default function App() {
               <Cpu size={20} className="text-[#00e87b]" />
             </div>
           </div>
-          <div className="text-center space-y-1">
+          <div className="text-center space-y-1.5 max-w-[280px]">
             <span className="text-[10px] font-bold tracking-[0.25em] text-[#7b93a8] uppercase block">
               INITIALIZING ML ENGINE
             </span>
             <span className="text-[9px] text-[#3f5669] block">
               Loading 48 teams · 1,200+ players · Model weights
             </span>
+            {showWakeupMessage && (
+              <motion.span 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-[9px] text-[#00e87b]/60 block leading-relaxed animate-pulse pt-1"
+              >
+                Waking up free-tier cloud database (takes ~50s to spin up if inactive)...
+              </motion.span>
+            )}
           </div>
         </div>
       </div>
