@@ -276,3 +276,18 @@ RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
 # ─── Google OAuth Configuration ──────────────────────────────────────────────
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 
+# ─── BluesMinds AI Chat Configuration ────────────────────────────────────────
+BLUESMINDS_API_KEY = os.getenv("BLUESMINDS_API_KEY", "")
+BLUESMINDS_BASE_URL = os.getenv("BLUESMINDS_BASE_URL", "https://api.bluesminds.com/v1")
+BLUESMINDS_MODEL = "grok-4.20-fast"
+
+# ─── Chat Security Configuration ─────────────────────────────────────────────
+CHAT_RATE_LIMIT_PER_MINUTE = 10  # Max chat requests per IP per minute
+CHAT_MAX_MESSAGE_LENGTH = 1000   # Max characters per user message
+CHAT_MAX_HISTORY_LENGTH = 20     # Max messages in conversation history
+CHAT_ALLOWED_ORIGINS = [         # CORS allowlisting for production
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+]
+

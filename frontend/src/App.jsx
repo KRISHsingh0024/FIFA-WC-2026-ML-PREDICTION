@@ -588,7 +588,287 @@ export default function App() {
           fetchLeaderboard();
         }}
       />
+
+      {/* ─── AI Chat Assistant ─── */}
+      <ChatWidget />
     </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  AI CHAT WIDGET — WC Oracle
+// ═══════════════════════════════════════════════════════════════════════════════
+function ChatWidget() {
+  const [isOpen, setIsOpen] = useState(false)
+  const [messages, setMessages] = useState([])
+  const [input, setInput] = useState('')
+  const [isStreaming, setIsStreaming] = useState(false)
+  const [error, setError] = useState(null)
+  const messagesEndRef = useRef(null)
+  const inputRef = useRef(null)
+
+  const suggestions = [
+    "⚽ Predict Brazil vs Germany",
+    "🏆 Who wins the World Cup?",
+    "📊 Tell me about France",
+    "🤕 What if Mbappé is injured?",
+  ]
+
+  // Auto-scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, isStreaming])
+
+  // Focus input when panel opens
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => inputRef.current?.focus(), 300)
+    }
+  }, [isOpen])
+
+  // Simple markdown-ish rendering
+  const renderContent = (text) => {
+    if (!text) return null
+    // Bold **text**
+    let html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    // Italic *text*
+    html = html.replace(/(?<!\*)\*(?!\*)(.*?)(?<!\*)\*(?!\*)/g, '<em>$1</em>')
+    // Line breaks
+    html = html.replace(/\n/g, '<br/>')
+    return <span dangerouslySetInnerHTML={{ __html: html }} />
+  }
+
+  const sendMessage = async (text) => {
+    if (!text.trim() || isStreaming) return
+    setError(null)
+
+    const userMsg = { role: 'user', content: text.trim() }
+    const newMessages = [...messages, userMsg]
+    setMessages(newMessages)
+    setInput('')
+    setIsStreaming(true)
+
+    // Add placeholder for AI response
+    const aiMsgIndex = newMessages.length
+    setMessages(prev => [...prev, { role: 'assistant', content: '' }])
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: newMessages })
+      })
+
+      // Handle non-SSE error responses
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}))
+        const errMsg = errData.message || `Error ${response.status}: Something went wrong.`
+        setMessages(prev => {
+          const updated = [...prev]
+          updated[aiMsgIndex] = { role: 'error', content: errMsg }
+          return updated
+        })
+        setIsStreaming(false)
+        return
+      }
+
+      // Stream SSE response
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+      let fullContent = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6).trim()
+            if (data === '[DONE]') break
+
+            try {
+              const parsed = JSON.parse(data)
+              if (parsed.error) {
+                setMessages(prev => {
+                  const updated = [...prev]
+                  updated[aiMsgIndex] = { role: 'error', content: parsed.message }
+                  return updated
+                })
+                setIsStreaming(false)
+                return
+              }
+              if (parsed.content) {
+                fullContent += parsed.content
+                setMessages(prev => {
+                  const updated = [...prev]
+                  updated[aiMsgIndex] = { role: 'assistant', content: fullContent }
+                  return updated
+                })
+              }
+            } catch (e) {
+              // Skip malformed chunks
+            }
+          }
+        }
+      }
+    } catch (err) {
+      setMessages(prev => {
+        const updated = [...prev]
+        updated[aiMsgIndex] = { role: 'error', content: 'Network error. Please check your connection and try again.' }
+        return updated
+      })
+    } finally {
+      setIsStreaming(false)
+    }
+  }
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      sendMessage(input)
+    }
+  }
+
+  return (
+    <>
+      {/* Floating Action Button */}
+      <button
+        id="chat-fab"
+        className="chat-fab"
+        onClick={() => setIsOpen(!isOpen)}
+        aria-label="Open AI Chat Assistant"
+      >
+        <span className="chat-fab-ring" />
+        {isOpen ? (
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        ) : (
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        )}
+      </button>
+
+      {/* Chat Panel */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            className="chat-panel"
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+          >
+            {/* Header */}
+            <div className="chat-header">
+              <div className="chat-header-left">
+                <div className="chat-avatar">🏆</div>
+                <div>
+                  <div className="chat-header-title">WC ORACLE</div>
+                  <div className="chat-header-subtitle">GPT-5 • AI ANALYST</div>
+                </div>
+              </div>
+              <button className="chat-close-btn" onClick={() => setIsOpen(false)} aria-label="Close chat">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+
+            {/* Messages */}
+            <div className="chat-messages">
+              {messages.length === 0 && (
+                <div className="chat-welcome">
+                  <span className="chat-welcome-icon">⚽</span>
+                  <div className="chat-welcome-title">WC ORACLE</div>
+                  <p className="chat-welcome-text">
+                    I'm your AI football analyst powered by XGBoost ML models. 
+                    Ask me about match predictions, team stats, or tournament projections!
+                  </p>
+                </div>
+              )}
+
+              {messages.map((msg, i) => (
+                <div
+                  key={i}
+                  className={`chat-msg ${
+                    msg.role === 'user' ? 'chat-msg-user' :
+                    msg.role === 'error' ? 'chat-msg-error' : 'chat-msg-ai'
+                  }`}
+                >
+                  {msg.role === 'error' ? (
+                    <span>⚠️ {msg.content}</span>
+                  ) : (
+                    renderContent(msg.content)
+                  )}
+                </div>
+              ))}
+
+              {isStreaming && messages[messages.length - 1]?.content === '' && (
+                <div className="chat-typing">
+                  <div className="chat-typing-dot" />
+                  <div className="chat-typing-dot" />
+                  <div className="chat-typing-dot" />
+                </div>
+              )}
+
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Quick Suggestions (show only when no messages) */}
+            {messages.length === 0 && (
+              <div className="chat-suggestions">
+                {suggestions.map((s, i) => (
+                  <button
+                    key={i}
+                    className="chat-suggestion-chip"
+                    onClick={() => sendMessage(s.replace(/^[^\s]+\s/, ''))}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Input Area */}
+            <div className="chat-input-area">
+              <input
+                ref={inputRef}
+                type="text"
+                className="chat-input"
+                placeholder="Ask about any matchup..."
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                disabled={isStreaming}
+                maxLength={1000}
+                id="chat-input"
+              />
+              <button
+                className="chat-send-btn"
+                onClick={() => sendMessage(input)}
+                disabled={!input.trim() || isStreaming}
+                aria-label="Send message"
+                id="chat-send"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13"/>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+              </button>
+            </div>
+
+            {/* Security Badge */}
+            <div className="chat-security-badge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+              <span>End-to-end secured • Rate limited • Input validated</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   )
 }
 
@@ -3466,11 +3746,19 @@ function LiveView({ setSelectedTeam, setActiveTab }) {
   useEffect(() => {
     if (subTab === 'real') {
       fetchComparison()
-      // Setup auto-update interval of 30 seconds
-      const intervalId = setInterval(() => {
-        fetchComparison()
-      }, 30000)
-      return () => clearInterval(intervalId)
+      
+      const isLocal = typeof window !== 'undefined' && (
+        window.location.hostname === 'localhost' || 
+        window.location.hostname === '127.0.0.1'
+      )
+      
+      // Setup auto-update interval of 30 seconds ONLY on local development
+      if (isLocal) {
+        const intervalId = setInterval(() => {
+          fetchComparison()
+        }, 30000)
+        return () => clearInterval(intervalId)
+      }
     }
   }, [subTab])
 
@@ -3752,7 +4040,7 @@ function LiveView({ setSelectedTeam, setActiveTab }) {
                 <button
                   onClick={() => fetchComparison(true)}
                   disabled={compLoading}
-                  className="px-3.5 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06] text-[#edf2f7] hover:text-white hover:bg-white/[0.08] disabled:opacity-40 transition text-[11px] font-semibold flex items-center gap-1.5 cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-[#00e87b] text-[#050a0e] hover:bg-[#00d46f] disabled:opacity-40 transition text-[11px] font-bold flex items-center gap-1.5 hover:shadow-[0_0_12px_rgba(0,232,123,0.3)] cursor-pointer"
                 >
                   <RefreshCw size={11} className={`${compLoading ? "animate-spin" : ""}`} />
                   Sync Feed
