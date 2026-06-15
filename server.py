@@ -1431,8 +1431,14 @@ def fetch_live_scores_from_api(force: bool = False):
                             "real_goals_b": real_goals_b,
                             "status": status
                         })
+            elif res.status_code in (401, 429):
+                print(f"API returned status {res.status_code} for date {date_str} (unauthorized/rate-limited). Aborting sync loop.")
+                break
             else:
                 print(f"API returned status {res.status_code} for date {date_str}")
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as ce:
+            print(f"Network error syncing matches for date {date_str}: {ce}. Aborting sync loop.")
+            break
         except Exception as e:
             print(f"Error fetching matches for date {date_str}: {e}")
             
@@ -1453,7 +1459,7 @@ def fetch_live_scores_from_api(force: bool = False):
                 with open(real_results_path, "r", encoding="utf-8") as f:
                     mtime = os.path.getmtime(real_results_path)
                     last_updated_str = datetime.datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M:%S")
-                    return json.load(f), True, last_updated_str + " (Fallback)"
+                    return json.load(f), False, last_updated_str + " (Fallback)"
             except Exception as e:
                 print(f"Error reading cached file on sync failure: {e}")
         return [], False, "No data available"
@@ -1463,11 +1469,12 @@ def get_live_api_config():
     api_config = load_api_config()
     key = api_config.get("api_key", "").strip()
     
-    # Check env if file config empty, default to True since fallback key is hardcoded
-    has_key = bool(key) or bool(os.getenv("RAPIDAPI_KEY")) or True
+    # Check if custom key is configured (i.e. not empty and not the default rate-limited fallback key)
+    DEFAULT_KEY = "ffec02eb77msh068419f66cfcc0dp1ef84bjsndb51922e5a21"
+    has_custom_key = (bool(key) and key != DEFAULT_KEY) or bool(os.getenv("RAPIDAPI_KEY"))
         
     return {
-        "configured": has_key,
+        "configured": has_custom_key,
         "provider": api_config.get("provider", "rapidapi")
     }
 
@@ -1537,7 +1544,11 @@ def get_real_comparison(force: bool = False):
         })
         
     api_config = load_api_config()
-    api_configured = bool(api_config.get("api_key", "").strip() or os.getenv("RAPIDAPI_KEY") or True)
+    key = api_config.get("api_key", "").strip()
+    DEFAULT_KEY = "ffec02eb77msh068419f66cfcc0dp1ef84bjsndb51922e5a21"
+    
+    # Api is considered configured if a custom key is set, OR if the current API sync is live and active
+    api_configured = (bool(key) and key != DEFAULT_KEY) or bool(os.getenv("RAPIDAPI_KEY")) or is_live
     provider = api_config.get("provider", "rapidapi")
     
     return {
