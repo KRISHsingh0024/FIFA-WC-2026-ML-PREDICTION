@@ -508,15 +508,45 @@ def run_deterministic_tournament(verbose=False) -> dict:
 
 def run_monte_carlo(n_simulations: int = config.NUM_SIMULATIONS):
     """
-    Computes deterministic forecast stats and saves the aggregated metrics to simulation_results.json.
-    We maintain the name run_monte_carlo for API compatibility.
+    Runs a stochastic Monte Carlo simulation to calculate realistic stage probabilities
+    for each team, while keeping the visual predicted bracket pathway stable and deterministic.
     """
-    logging.info("Generating deterministic tournament winner forecast...")
+    logging.info(f"Running {n_simulations} stochastic Monte Carlo simulations to collect realistic stage probabilities...")
     
-    # 1. Run deterministic tournament
-    res = run_deterministic_tournament()
+    # 1. Initialize stage counters
+    champion_counts = Counter()
+    finalist_counts = Counter()
+    sf_counts = Counter()
+    qf_counts = Counter()
+    r16_counts = Counter()
+    r32_counts = Counter()
     
-    # 2. Load team features for stats rating
+    # 2. Run stochastic simulations
+    for i in range(n_simulations):
+        if i % 200 == 0 and i > 0:
+            logging.info(f"Completed {i} simulations...")
+        try:
+            res_stoch = run_single_tournament()
+            champ = res_stoch["champion"]
+            runner_up = res_stoch["runner_up"]
+            
+            champion_counts[champ] += 1
+            
+            finalist_counts[champ] += 1
+            finalist_counts[runner_up] += 1
+            
+            for t in res_stoch["top_4"]:
+                sf_counts[t] += 1
+            for t in res_stoch["top_8"]:
+                qf_counts[t] += 1
+            for t in res_stoch["top_16"]:
+                r16_counts[t] += 1
+            for t in res_stoch["top_32"]:
+                r32_counts[t] += 1
+        except Exception as e:
+            logging.warning(f"Error in simulation run {i}: {e}")
+            
+    # 3. Load team features for stats rating
     team_features_path = os.path.join(config.PROCESSED_DATA_DIR, "team_features.parquet")
     df_teams = None
     if os.path.exists(team_features_path):
@@ -533,7 +563,6 @@ def run_monte_carlo(n_simulations: int = config.NUM_SIMULATIONS):
         
         if df_teams is not None and team in df_teams.index:
             feat = df_teams.loc[team]
-            # performance features
             atk = feat.get("team_attack_strength", 0.5)
             dfn = feat.get("team_defense_solidity", 0.5)
             mid = feat.get("team_midfield_creativity", 0.5)
@@ -544,56 +573,19 @@ def run_monte_carlo(n_simulations: int = config.NUM_SIMULATIONS):
         else:
             perf_factor = 0.5
             
-        # Overall strength index
         raw_ratings[team] = perf_factor * 0.65 + rank_factor * 0.35
         
-    # Scale ratings to look like realistic tournament win probabilities (summing to ~1.0)
-    # Give champion team an extra boost to ensure it's #1 in contenders
-    champ = res["champion"]
-    raw_ratings[champ] *= 1.25
-    
-    total_rating = sum(raw_ratings.values())
+    # 4. Compile statistics
     stats = {}
     for team in config.ALL_TEAMS:
-        norm_prob = round(raw_ratings[team] / total_rating, 4)
+        # Calculate probabilities from Monte Carlo counts
+        champion_prob = round(champion_counts[team] / n_simulations, 4)
+        finalist_prob = round(finalist_counts[team] / n_simulations, 4)
+        semi_finalist_prob = round(sf_counts[team] / n_simulations, 4)
+        quarter_finalist_prob = round(qf_counts[team] / n_simulations, 4)
+        round_of_16_prob = round(r16_counts[team] / n_simulations, 4)
+        round_of_32_prob = round(r32_counts[team] / n_simulations, 4)
         
-        # Calculate other progress stages proportionally
-        champion_prob = norm_prob
-        finalist_prob = min(0.98, round(champion_prob * 1.8, 4))
-        semi_finalist_prob = min(0.99, round(finalist_prob * 1.5, 4))
-        quarter_finalist_prob = min(0.99, round(semi_finalist_prob * 1.4, 4))
-        round_of_16_prob = min(0.99, round(quarter_finalist_prob * 1.3, 4))
-        round_of_32_prob = min(0.99, round(round_of_16_prob * 1.2, 4))
-        
-        # Override the deterministic winner's probabilities so they are prominent
-        if team == champ:
-            champion_prob = 1.0
-            finalist_prob = 1.0
-            semi_finalist_prob = 1.0
-            quarter_finalist_prob = 1.0
-            round_of_16_prob = 1.0
-            round_of_32_prob = 1.0
-        elif team == res["runner_up"]:
-            finalist_prob = 1.0
-            semi_finalist_prob = 1.0
-            quarter_finalist_prob = 1.0
-            round_of_16_prob = 1.0
-            round_of_32_prob = 1.0
-        elif team in res["top_4"]:
-            semi_finalist_prob = 1.0
-            quarter_finalist_prob = 1.0
-            round_of_16_prob = 1.0
-            round_of_32_prob = 1.0
-        elif team in res["top_8"]:
-            quarter_finalist_prob = 1.0
-            round_of_16_prob = 1.0
-            round_of_32_prob = 1.0
-        elif team in res["top_16"]:
-            round_of_16_prob = 1.0
-            round_of_32_prob = 1.0
-        elif team in res["top_32"]:
-            round_of_32_prob = 1.0
-            
         stats[team] = {
             "champion_prob": champion_prob,
             "finalist_prob": finalist_prob,
@@ -604,20 +596,23 @@ def run_monte_carlo(n_simulations: int = config.NUM_SIMULATIONS):
             "power_rating": round(raw_ratings[team], 4)
         }
         
+    # 5. Run deterministic tournament to get the single predicted bracket pathway
+    res_det = run_deterministic_tournament()
+    
     output_data = {
         "sim_stats": stats,
-        "sample_run": res["bracket"],
-        "n_simulations": 1 # 1 deterministic run
+        "sample_run": res_det["bracket"],
+        "n_simulations": n_simulations
     }
     
     output_path = os.path.join(config.PROCESSED_DATA_DIR, "simulation_results.json")
     with open(output_path, "w") as f:
         json.dump(output_data, f, indent=4)
         
-    logging.info(f"Saved deterministic winner forecast statistics to {output_path}")
-    print(f"\n--- PREDICTED TOURNAMENT CHAMPION: {champ} ---")
-    print(f"Runner Up  : {res['runner_up']}")
-    print(f"Third Place: {res['third_place']}")
+    logging.info(f"Saved Monte Carlo statistics and deterministic pathway to {output_path}")
+    print(f"\n--- DETERMINISTIC PREDICTED CHAMPION: {res_det['champion']} ---")
+    print(f"Runner Up  : {res_det['runner_up']}")
+    print(f"Third Place: {res_det['third_place']}")
     return stats
 
 if __name__ == "__main__":
