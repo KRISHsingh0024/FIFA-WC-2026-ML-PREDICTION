@@ -23,6 +23,7 @@ frontend/dist/
 # Logs and databases
 *.log
 data/arena_leaderboard.json
+data/live_tournament.json
 downloaded_files/
 
 # OS specific files
@@ -31,4 +32,3 @@ Thumbs.db
 
 # API Configurations & Cache
 data/api_config.json
-data/real_results.json

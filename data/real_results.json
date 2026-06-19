@@ -1,0 +1,74 @@
+[
+    {
+        "match_id": "R_4667751",
+        "date": "June 11, 2026",
+        "team_a": "Mexico",
+        "team_b": "South Africa",
+        "real_goals_a": 2,
+        "real_goals_b": 0,
+        "status": "completed"
+    },
+    {
+        "match_id": "R_4667752",
+        "date": "June 12, 2026",
+        "team_a": "South Korea",
+        "team_b": "Czechia",
+        "real_goals_a": 2,
+        "real_goals_b": 1,
+        "status": "completed"
+    },
+    {
+        "match_id": "R_4667757",
+        "date": "June 12, 2026",
+        "team_a": "Canada",
+        "team_b": "Bosnia and Herzegovina",
+        "real_goals_a": 1,
+        "real_goals_b": 1,
+        "status": "completed"
+    },
+    {
+        "match_id": "R_4667771",
+        "date": "June 13, 2026",
+        "team_a": "United States",
+        "team_b": "Paraguay",
+        "real_goals_a": 4,
+        "real_goals_b": 1,
+        "status": "completed"
+    },
+    {
+        "match_id": "R_4667758",
+        "date": "June 13, 2026",
+        "team_a": "Qatar",
+        "team_b": "Switzerland",
+        "real_goals_a": 0,
+        "real_goals_b": 0,
+        "status": "scheduled"
+    },
+    {
+        "match_id": "R_4667764",
+        "date": "June 14, 2026",
+        "team_a": "Brazil",
+        "team_b": "Morocco",
+        "real_goals_a": 0,
+        "real_goals_b": 0,
+        "status": "scheduled"
+    },
+    {
+        "match_id": "R_4667765",
+        "date": "June 14, 2026",
+        "team_a": "Haiti",
+        "team_b": "Scotland",
+        "real_goals_a": 0,
+        "real_goals_b": 0,
+        "status": "scheduled"
+    },
+    {
+        "match_id": "R_4667777",
+        "date": "June 14, 2026",
+        "team_a": "Germany",
+        "team_b": "Curacao",
+        "real_goals_a": 0,
+        "real_goals_b": 0,
+        "status": "scheduled"
+    }
+]
