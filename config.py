@@ -276,10 +276,19 @@ RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
 # ─── Google OAuth Configuration ──────────────────────────────────────────────
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 
-# ─── BluesMinds AI Chat Configuration ────────────────────────────────────────
+# ─── Grok AI Chat Configuration ──────────────────────────────────────────────
+XAI_API_KEY = os.getenv("XAI_API_KEY", "")
+XAI_BASE_URL = os.getenv("XAI_BASE_URL", "https://api.x.ai/v1")
+XAI_MODEL = "grok-2-1212"
+
 BLUESMINDS_API_KEY = os.getenv("BLUESMINDS_API_KEY", "")
 BLUESMINDS_BASE_URL = os.getenv("BLUESMINDS_BASE_URL", "https://api.bluesminds.com/v1")
 BLUESMINDS_MODEL = "grok-4.20-fast"
+
+# Active configuration
+AI_API_KEY = XAI_API_KEY if XAI_API_KEY else BLUESMINDS_API_KEY
+AI_BASE_URL = XAI_BASE_URL if XAI_API_KEY else BLUESMINDS_BASE_URL
+AI_MODEL = XAI_MODEL if XAI_API_KEY else BLUESMINDS_MODEL
 
 # ─── Chat Security Configuration ─────────────────────────────────────────────
 CHAT_RATE_LIMIT_PER_MINUTE = 10  # Max chat requests per IP per minute

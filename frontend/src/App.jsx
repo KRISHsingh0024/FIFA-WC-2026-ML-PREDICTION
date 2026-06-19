@@ -336,7 +336,7 @@ export default function App() {
     { id: 'predictor', icon: <Flame size={18} />, label: 'Match Predictor', onActivate: () => { if (!prediction) runPrediction(predTeamA, predTeamB) } },
     { id: 'live', icon: <Activity size={18} />, label: 'Live Match Center' },
     { id: 'teams', icon: <Users size={18} />, label: 'Rosters & Teams' },
-    { id: 'simulator', icon: <Sliders size={18} />, label: 'Tournament Sim' },
+    { id: 'simulator', icon: <Sliders size={18} />, label: 'Winner Forecast' },
     { id: 'arena', icon: <Target size={18} />, label: 'Arena Playground' },
   ]
 
@@ -787,7 +787,7 @@ function ChatWidget() {
                 <div className="chat-avatar">🏆</div>
                 <div>
                   <div className="chat-header-title">WC ORACLE</div>
-                  <div className="chat-header-subtitle">GPT-5 • AI ANALYST</div>
+                  <div className="chat-header-subtitle">GROK • AI ANALYST</div>
                 </div>
               </div>
               <button className="chat-close-btn" onClick={() => setIsOpen(false)} aria-label="Close chat">
@@ -802,7 +802,7 @@ function ChatWidget() {
                   <span className="chat-welcome-icon">⚽</span>
                   <div className="chat-welcome-title">WC ORACLE</div>
                   <p className="chat-welcome-text">
-                    I'm your AI football analyst powered by XGBoost ML models. 
+                    I'm your AI football analyst powered by Grok and XGBoost ML models. 
                     Ask me about match predictions, team stats, or tournament projections!
                   </p>
                 </div>
@@ -1061,7 +1061,7 @@ function DashboardView({ simResults, teams, setActiveTab, setSelectedTeam }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.45, duration: 0.4 }}
             >
-              Leverage XGBoost models and Monte Carlo simulations to forecast every matchup across all 48 teams competing in North America.
+              Leverage XGBoost models and deterministic winner forecasts to forecast every matchup across all 48 teams competing in North America.
             </motion.p>
             
             <motion.div 
@@ -1081,7 +1081,7 @@ function DashboardView({ simResults, teams, setActiveTab, setSelectedTeam }) {
                 onClick={() => setActiveTab('simulator')}
                 className="border border-white/10 text-[#edf2f7] hover:border-[#00e87b]/30 hover:text-[#00e87b] px-5 py-2.5 rounded-full text-[12px] font-bold transition-all tracking-wide"
               >
-                Simulate Tournament
+                Winner Forecast
               </button>
             </motion.div>
           </div>
@@ -1123,7 +1123,7 @@ function DashboardView({ simResults, teams, setActiveTab, setSelectedTeam }) {
         />
         <AnimatedStatCard 
           icon={<BarChart3 size={16} className="text-[#00e87b]" />}
-          value={100000} suffix="+" label="Matches Simulated" delay={0.3}
+          value={100000} suffix="+" label="Matches Forecasted" delay={0.3}
         />
         <AnimatedStatCard 
           icon={<Target size={16} className="text-[#00e87b]" />}
@@ -1342,7 +1342,7 @@ function DashboardView({ simResults, teams, setActiveTab, setSelectedTeam }) {
           {[
             { icon: <Database size={13} />, text: 'Player stats refreshed', time: 'June 2026' },
             { icon: <Cpu size={13} />, text: 'XGBoost model v3.2 deployed', time: '2 days ago' },
-            { icon: <BarChart3 size={13} />, text: 'Monte Carlo recalibrated', time: '1,000 simulations' },
+            { icon: <BarChart3 size={13} />, text: 'Winner Forecast recalibrated', time: 'Based on squad performance & H2H' },
             { icon: <Clock size={13} />, text: 'Group draw finalized', time: 'Official FIFA draw' },
           ].map((update, i) => (
             <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl bg-white/[0.015] border border-white/[0.03]">
@@ -2195,10 +2195,10 @@ function SimulatorView({ simResults, simulating, triggerSimulationRun, user, set
           <div className="space-y-1.5 flex-1 relative z-10">
             <h2 className="text-xl font-display tracking-wider text-white flex items-center gap-2">
               <Trophy size={20} className="text-[#d4a54a]" />
-              MONTE CARLO SIMULATOR
+              WINNER FORECAST ENGINE
             </h2>
             <p className="text-[12px] text-[#7b93a8] max-w-lg">
-              Run 500 complete tournament simulations incorporating current player stats and model weights.
+              Calculate the complete tournament winner forecast incorporating squad performance features, historical H2H matchups, and model weights.
             </p>
           </div>
           <button 
@@ -2209,12 +2209,12 @@ function SimulatorView({ simResults, simulating, triggerSimulationRun, user, set
             {simulating ? (
               <>
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#050a0e] border-t-transparent"></div>
-                Simulating...
+                Calculating...
               </>
             ) : (
               <>
                 <Play size={12} fill="currentColor" />
-                Run 500 Simulations
+                Calculate Winner Forecast
               </>
             )}
           </button>
@@ -2291,7 +2291,7 @@ function SimulatorView({ simResults, simulating, triggerSimulationRun, user, set
         <div className="space-y-4">
           <h3 className="font-display text-lg tracking-wider text-white flex items-center gap-2">
             <TrendingUp size={16} className="text-[#00e87b]" />
-            {simTab === 'monte_carlo' ? 'SIMULATED BRACKET PATHWAY' : 'INTERACTIVE PREDICTIONS PATHWAY'}
+            {simTab === 'monte_carlo' ? 'FORECASTED BRACKET PATHWAY' : 'INTERACTIVE PREDICTIONS PATHWAY'}
           </h3>
           
           <div className="overflow-x-auto pb-4 pt-2">
@@ -2586,7 +2586,7 @@ function SimulatorView({ simResults, simulating, triggerSimulationRun, user, set
 
         </div>
       ) : (
-        <div className="flex h-64 items-center justify-center text-[#3f5669] text-sm">Click simulate to generate a bracket pathway.</div>
+        <div className="flex h-64 items-center justify-center text-[#3f5669] text-sm">Click calculate to generate a bracket pathway.</div>
       )}
 
       {/* XGBoost Odds Modal Overlay */}
@@ -2920,7 +2920,7 @@ function LandingView({ simResults, setActiveTab }) {
             className="text-[#7b93a8] text-sm leading-relaxed"
             variants={staggerItem}
           >
-            Experience the next generation of tournament forecasting. Harnessing deep player performance telemetry, historical matchup records, and complex XGBoost simulation matrices, Antigravity models predict the road to the 2026 champion trophy across North America.
+            Experience the next generation of tournament forecasting. Harnessing deep player performance telemetry, historical matchup records, and complex XGBoost prediction matrices, Antigravity models predict the road to the 2026 champion trophy across North America.
           </motion.p>
 
           {/* Stats row */}
@@ -2950,7 +2950,7 @@ function LandingView({ simResults, setActiveTab }) {
               onClick={() => setActiveTab('predictor')}
               className="bg-[#00e87b] hover:bg-[#00d46f] text-[#050a0e] px-6 py-3 rounded-full text-[12px] font-bold transition-all flex items-center gap-2 tracking-wide hover:shadow-[0_0_20px_rgba(0,232,123,0.35)] cursor-pointer"
             >
-              Match Simulator
+              Match Predictor
               <ArrowRight size={14} />
             </button>
             <button 
@@ -3051,9 +3051,9 @@ function LandingView({ simResults, setActiveTab }) {
       >
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-[9px] font-bold uppercase text-[#00e87b] tracking-[0.2em] block">MONTE CARLO SIMULATION</span>
-            <h3 className="font-display text-2xl text-white tracking-wider">COMPLETE TOURNAMENT PROBABILITIES</h3>
-            <p className="text-[11px] text-[#7b93a8]">All 48 teams ranked by predicted championship probability across 1,000+ simulations</p>
+            <span className="text-[9px] font-bold uppercase text-[#00e87b] tracking-[0.2em] block">WINNER FORECAST MODEL</span>
+            <h3 className="font-display text-2xl text-white tracking-wider">COMPLETE TOURNAMENT FORECASTS</h3>
+            <p className="text-[11px] text-[#7b93a8]">All 48 teams ranked by predicted win strength index and power rating</p>
           </div>
           <button
             onClick={() => setShowAllTeams(!showAllTeams)}

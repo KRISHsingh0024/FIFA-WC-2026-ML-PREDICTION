@@ -20,6 +20,7 @@ class MatchPredictor:
     def __init__(self):
         self.model = None
         self.team_features = None
+        self.h2h_history = {} # Cache historical H2H matches
         self.cache = {} # Cache predicted matchup probabilities
         self.load_resources()
         
@@ -41,6 +42,21 @@ class MatchPredictor:
             except Exception as e:
                 pass
         self.team_features = pd.read_parquet(team_path).set_index("national_team")
+        
+        # Load historical matches for H2H lookup
+        hist_path = os.path.join(config.RAW_DATA_DIR, "historical_matches.parquet")
+        if os.path.exists(hist_path):
+            try:
+                df_hist = pd.read_parquet(hist_path)
+                for _, row in df_hist.iterrows():
+                    t1, t2 = row["home_team"], row["away_team"]
+                    outcome = row["outcome"]
+                    pair = tuple(sorted([t1, t2]))
+                    if pair not in self.h2h_history:
+                        self.h2h_history[pair] = []
+                    self.h2h_history[pair].append((t1, outcome))
+            except Exception as e:
+                logging.warning(f"Could not load historical matches for H2H lookup: {e}")
         
     def get_match_features(self, team_a: str, team_b: str) -> pd.DataFrame:
         """
@@ -75,10 +91,24 @@ class MatchPredictor:
         r2 = config.FIFA_RANKINGS.get(team_b, 50)
         fifa_rank_diff = r2 - r1 # positive = team A is better ranked (lower rank)
         
-        # H2H win rate (For manual predictions, we use a calculated baseline or default)
-        # We can approximate based on rankings or static history
-        h2h_win_rate = 0.5 + (fifa_rank_diff * 0.005)
-        h2h_win_rate = np.clip(h2h_win_rate, 0.2, 0.8)
+        # H2H win rate from historical matches
+        pair = tuple(sorted([team_a, team_b]))
+        h2hs = self.h2h_history.get(pair, [])
+        t1_wins = 0
+        total_games = 0
+        for ht, out in h2hs:
+            total_games += 1
+            if ht == team_a and out == "W":
+                t1_wins += 1
+            elif ht != team_a and out == "L":
+                t1_wins += 1
+                
+        if total_games > 0:
+            h2h_win_rate = t1_wins / total_games
+        else:
+            # Fallback to rank diff baseline
+            h2h_win_rate = 0.5 + (fifa_rank_diff * 0.005)
+            h2h_win_rate = np.clip(h2h_win_rate, 0.2, 0.8)
         
         # 5. New Match Features (Differentials)
         ucl_rep_diff = feat1["team_ucl_representation"] - feat2["team_ucl_representation"]

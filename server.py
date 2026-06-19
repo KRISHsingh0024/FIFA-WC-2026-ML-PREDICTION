@@ -1740,7 +1740,7 @@ def build_prediction_context(teams_found: list) -> str:
 SYSTEM_PROMPT = """You are **WC Oracle** 🏆, the official AI assistant for the FIFA World Cup 2026 Predictor website.
 
 ## Your Identity
-- You are an expert football analyst powered by XGBoost machine learning models and Monte Carlo simulations
+- You are an expert football analyst powered by XGBoost machine learning models and deterministic tournament forecasts
 - You have access to real-time stats for all 48 teams competing in the 2026 FIFA World Cup (USA, Mexico, Canada)
 - You speak with authority but are friendly, engaging, and use football terminology naturally
 - You use relevant emojis (e.g., ⚽, 🏆, 🔮, 📊, 🤕, and country flags like 🇫🇷, 🇧🇷, 🇦🇷, 🇺🇸, 🇲🇽, 🇨🇦) to make responses engaging and visually premium.
@@ -1749,7 +1749,7 @@ SYSTEM_PROMPT = """You are **WC Oracle** 🏆, the official AI assistant for the
 ## Your Capabilities
 1. **Match Predictions** — You can predict any matchup using ML-powered win probabilities
 2. **Team Analysis** — You know each team's attack strength, defense solidity, midfield creativity, squad depth, and star players
-3. **Tournament Projections** — You can discuss championship probabilities from Monte Carlo simulations
+3. **Tournament Projections** — You can discuss championship forecasts from deterministic model runs
 4. **Injury Impact** — You can explain how injuries to key players affect team performance
 5. **World Cup Knowledge** — You know the groups, schedule, venues, and format of the 2026 World Cup
 
@@ -1796,12 +1796,12 @@ async def chat_endpoint(req: ChatRequest, request: Request):
         )
     
     # ── 2. API Key Validation (server-side check) ─────────────────────────────
-    if not config.BLUESMINDS_API_KEY:
+    if not config.AI_API_KEY:
         return JSONResponse(
             status_code=503,
             content={
                 "error": "service_unavailable",
-                "message": "AI chat assistant is not configured. Please contact the administrator."
+                "message": "Grok AI chat assistant is not configured. Please contact the administrator."
             }
         )
     
@@ -1817,43 +1817,41 @@ async def chat_endpoint(req: ChatRequest, request: Request):
         )
     
     # ── 4. Build Context from ML Model ────────────────────────────────────────
-    # Get the latest user message to detect teams
     latest_user_msg = ""
     for msg in reversed(sanitized_messages):
         if msg["role"] == "user":
             latest_user_msg = msg["content"]
             break
-    
+            
     teams_found = detect_teams_in_text(latest_user_msg)
     ml_context = build_prediction_context(teams_found) if teams_found or any(
         kw in latest_user_msg.lower() for kw in ["winner", "champion", "win the world cup", "tournament", "predict", "who wins"]
     ) else ""
     
-    # If asking about tournament but no teams detected, still add sim context
     if not teams_found and any(kw in latest_user_msg.lower() for kw in ["winner", "champion", "who wins", "tournament", "favorites"]):
         ml_context = build_prediction_context([])
-    
-    # ── 5. Construct Messages for GPT-5 ───────────────────────────────────────
+        
+    # ── 5. Construct Messages for Grok ────────────────────────────────────────
     system_content = SYSTEM_PROMPT
     if ml_context:
         system_content += f"\n\n## Live ML Data (use this data in your response)\n{ml_context}"
-    
+        
     llm_messages = [{"role": "system", "content": system_content}]
     llm_messages.extend(sanitized_messages)
     
-    # ── 6. Stream Response from BluesMinds GPT-5 ──────────────────────────────
+    # ── 6. Stream Response from Grok AI ───────────────────────────────────────
     import requests as http_requests
     
     async def stream_llm_response():
         try:
             response = http_requests.post(
-                f"{config.BLUESMINDS_BASE_URL}/chat/completions",
+                f"{config.AI_BASE_URL}/chat/completions",
                 headers={
-                    "Authorization": f"Bearer {config.BLUESMINDS_API_KEY}",
+                    "Authorization": f"Bearer {config.AI_API_KEY}",
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": config.BLUESMINDS_MODEL,
+                    "model": config.AI_MODEL,
                     "messages": llm_messages,
                     "stream": True,
                     "max_tokens": 1024,
@@ -1864,19 +1862,17 @@ async def chat_endpoint(req: ChatRequest, request: Request):
             )
             
             if response.status_code != 200:
-                # ── Error Handling: descriptive but no stack traces ────────
                 error_body = ""
                 try:
                     error_body = response.text[:200]
                 except Exception:
                     pass
-                print(f"BluesMinds API error (status {response.status_code}): {error_body}")
+                print(f"Grok API error (status {response.status_code}): {error_body}")
                 yield f"data: {json.dumps({'error': True, 'message': 'AI service temporarily unavailable. Please try again.'})}\n\n"
                 yield "data: [DONE]\n\n"
                 return
-            
-            # Stream SSE chunks
-            response.encoding = 'utf-8'  # Force UTF-8 decoding for streaming lines
+                
+            response.encoding = 'utf-8'
             for line in response.iter_lines(decode_unicode=True):
                 if line:
                     if line.startswith("data: "):
@@ -1896,19 +1892,18 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                             continue
                             
         except http_requests.exceptions.Timeout:
-            print("BluesMinds API timeout")
+            print("Grok API timeout")
             yield f"data: {json.dumps({'error': True, 'message': 'Request timed out. Please try again.'})}\n\n"
             yield "data: [DONE]\n\n"
         except http_requests.exceptions.ConnectionError:
-            print("BluesMinds API connection error")
+            print("Grok API connection error")
             yield f"data: {json.dumps({'error': True, 'message': 'Unable to connect to AI service. Please check your connection.'})}\n\n"
             yield "data: [DONE]\n\n"
         except Exception as e:
-            # ── Error Handling: log internally, expose nothing to client ───
             print(f"Chat streaming error: {type(e).__name__}: {e}")
             yield f"data: {json.dumps({'error': True, 'message': 'An unexpected error occurred. Please try again.'})}\n\n"
             yield "data: [DONE]\n\n"
-    
+            
     return StreamingResponse(
         stream_llm_response(),
         media_type="text/event-stream",
@@ -1923,11 +1918,13 @@ async def chat_endpoint(req: ChatRequest, request: Request):
 def chat_health():
     """Health check for the AI chat service — no sensitive info exposed."""
     return {
-        "status": "ok" if config.BLUESMINDS_API_KEY else "unconfigured",
-        "model": config.BLUESMINDS_MODEL,
+        "status": "ok" if config.AI_API_KEY else "unconfigured",
+        "model": config.AI_MODEL,
         "rate_limit": config.CHAT_RATE_LIMIT_PER_MINUTE
     }
 
 if __name__ == "__main__":
     uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=True)
+
+
 
