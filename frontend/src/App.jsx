@@ -673,10 +673,15 @@ function ChatWidget() {
     setMessages(prev => [...prev, { role: 'assistant', content: '' }])
 
     try {
+      // Filter out any empty assistant messages or temporary error notifications
+      const sanitizedMessages = newMessages.filter(
+        msg => (msg.role === 'user' || msg.role === 'assistant') && typeof msg.content === 'string' && msg.content.trim() !== ''
+      )
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMessages })
+        body: JSON.stringify({ messages: sanitizedMessages })
       })
 
       // Handle non-SSE error responses
